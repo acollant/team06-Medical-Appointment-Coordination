@@ -47,12 +47,22 @@ const FIXTURES = {
     },
     "Dr. Amy Patel": {
       "2025-09-08": ["11:00", "11:30", "14:00", "14:30"],
+      "2025-09-12": ["09:30", "10:00"],
     },
     "Dr. Robert Kim": {
       "2025-09-09": ["15:00", "15:30", "16:00"],
     },
     "Dr. Sarah Lee": {
       "2025-09-10": ["14:30", "15:00", "15:30"],
+      "2025-09-11": ["11:00", "11:30"],
+    },
+    "Dr. Lisa Wong": {
+      "2025-09-11": ["10:00", "10:30"],
+      "2025-09-12": ["15:00", "15:30"],
+      "2025-09-15": ["09:15", "09:45"],
+    },
+    "Dr. Michael Rivera": {
+      "2025-09-12": ["09:30", "10:00", "11:00"],
     },
   },
   appointments: [
@@ -120,4 +130,15 @@ function applyKaggleFixtures() {
   FIXTURES.specialties = [...new Set(KAGGLE_FIXTURES.providers.map((p) => p.specialty))];
 }
 
+/** Merge demo mock data — multi-site locations, geo, expanded availability (overrides Kaggle stubs) */
+function applyDemoFixtures() {
+  if (typeof DEMO_FIXTURES === "undefined") return;
+  FIXTURES.patientProfile = DEMO_FIXTURES.patientProfile;
+  FIXTURES.locations = DEMO_FIXTURES.locations;
+  FIXTURES.providers = DEMO_FIXTURES.providers;
+  FIXTURES.availabilityByService = DEMO_FIXTURES.availabilityByService;
+  FIXTURES.specialties = [...new Set(DEMO_FIXTURES.providers.map((p) => p.specialty))];
+}
+
 applyKaggleFixtures();
+applyDemoFixtures();

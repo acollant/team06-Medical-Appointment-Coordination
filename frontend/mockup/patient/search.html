@@ -8,7 +8,7 @@
   <link rel="stylesheet" href="../css/layout.css">
   <link rel="stylesheet" href="../css/components.css">
   <style>
-    .search-tabs { display: flex; gap: 8px; margin-bottom: 24px; border-bottom: 1px solid var(--color-border); padding-bottom: 0; }
+    .search-tabs { display: flex; gap: 8px; margin-bottom: 24px; border-bottom: 1px solid var(--color-border); padding-bottom: 0; flex-wrap: wrap; }
     .search-tabs button {
       padding: 10px 16px; border: none; background: none; cursor: pointer;
       font-family: inherit; font-size: 0.9rem; color: var(--color-text-muted);
@@ -34,6 +34,12 @@
     .availability-row p { margin: 2px 0 0; font-size: 0.85rem; color: var(--color-text-muted); }
     .results-header { margin-bottom: 16px; color: var(--color-text-muted); font-size: 0.9rem; }
     .panel-hidden { display: none; }
+    .highlight-card { border: 2px solid var(--color-primary); background: #f8fbff; }
+    .highlight-card h3 { margin-top: 8px; }
+    .alt-practitioner { border-left: 3px solid var(--color-border); }
+    .demo-note { font-size: 0.8rem; color: var(--color-text-muted); margin-top: 16px; }
+    .sort-toggle { display: flex; gap: 8px; align-items: center; font-size: 0.85rem; }
+    .sort-toggle label { display: flex; align-items: center; gap: 4px; cursor: pointer; font-weight: 400; }
   </style>
 </head>
 <body class="app-shell">
@@ -48,10 +54,11 @@
   <main class="app-main">
     <a href="dashboard.html" class="back-link">← Back</a>
     <h1 class="page-title">Find appointment availability</h1>
-    <p class="page-subtitle">Services and slots aligned with Our Clinic phone/IVR call data (Kaggle 2024)</p>
+    <p class="page-subtitle">Search open slots by service, find the closest practitioner, or browse by specialty</p>
 
     <div class="search-tabs">
       <button type="button" id="tab-by-service" class="active">By service</button>
+      <button type="button" id="tab-closest">Closest to me</button>
       <button type="button" id="tab-by-provider">By provider</button>
     </div>
 
@@ -62,11 +69,29 @@
       <div class="filter-bar">
         <div class="form-group">
           <label>Location</label>
-          <select id="service-location"><option>Our Clinic</option></select>
+          <select id="service-location"></select>
+        </div>
+        <div class="form-group sort-toggle">
+          <label><input type="radio" name="service-sort" value="time" checked> Earliest first</label>
+          <label><input type="radio" name="service-sort" value="distance"> Nearest first</label>
         </div>
         <button type="button" class="btn btn-primary" id="service-search-btn">Search availability</button>
       </div>
       <div id="service-results"></div>
+    </div>
+
+    <!-- US-4.7: Closest practitioner -->
+    <div id="panel-closest" class="panel-hidden">
+      <p class="page-subtitle" style="margin-top:0;">We'll match you with the nearest practitioner who has an open slot.</p>
+      <div class="service-grid" id="closest-service-grid"></div>
+      <div class="filter-bar">
+        <div class="form-group">
+          <label>Your ZIP (demo)</label>
+          <input type="text" id="patient-zip" value="11201" maxlength="5" placeholder="11201">
+        </div>
+        <button type="button" class="btn btn-primary" id="closest-search-btn">Find closest practitioner</button>
+      </div>
+      <div id="closest-results"></div>
     </div>
 
     <!-- US-4.1: Search by provider specialty -->
@@ -74,15 +99,11 @@
       <div class="filter-bar">
         <div class="form-group">
           <label>Specialty</label>
-          <select id="specialty">
-            <option value="Cardiology">Cardiology</option>
-            <option value="Internal Medicine">Internal Medicine</option>
-            <option value="Dermatology">Dermatology</option>
-          </select>
+          <select id="specialty"></select>
         </div>
         <div class="form-group">
           <label>Location</label>
-          <select id="location"><option>Our Clinic</option></select>
+          <select id="location"></select>
         </div>
         <button type="button" class="btn btn-primary" id="search-btn">Search providers</button>
       </div>
@@ -90,6 +111,7 @@
     </div>
   </main>
   <script src="../js/kaggle-fixtures.js"></script>
+  <script src="../js/demo-fixtures.js"></script>
   <script src="../js/fixtures.js"></script>
   <script src="../js/app.js"></script>
   <script src="../js/search.js"></script>
@@ -99,24 +121,51 @@
       initShell(session, [], "search.html");
 
       let selectedService = "cardiology";
+      let selectedClosestService = "cardiology";
       const params = new URLSearchParams(location.search);
-      if (params.get("service")) selectedService = params.get("service");
+      if (params.get("service")) {
+        selectedService = params.get("service");
+        selectedClosestService = params.get("service");
+      }
 
       const panelService = document.getElementById("panel-by-service");
+      const panelClosest = document.getElementById("panel-closest");
       const panelProvider = document.getElementById("panel-by-provider");
       const tabService = document.getElementById("tab-by-service");
+      const tabClosest = document.getElementById("tab-closest");
       const tabProvider = document.getElementById("tab-by-provider");
 
+      populateLocationSelect(document.getElementById("service-location"));
+      populateLocationSelect(document.getElementById("location"));
+
+      const specialtyEl = document.getElementById("specialty");
+      specialtyEl.innerHTML = FIXTURES.specialties
+        .map((s) => `<option value="${s}">${s}</option>`)
+        .join("");
+
       function showTab(tab) {
-        const isService = tab === "service";
-        panelService.classList.toggle("panel-hidden", !isService);
-        panelProvider.classList.toggle("panel-hidden", isService);
-        tabService.classList.toggle("active", isService);
-        tabProvider.classList.toggle("active", !isService);
+        panelService.classList.toggle("panel-hidden", tab !== "service");
+        panelClosest.classList.toggle("panel-hidden", tab !== "closest");
+        panelProvider.classList.toggle("panel-hidden", tab !== "provider");
+        tabService.classList.toggle("active", tab === "service");
+        tabClosest.classList.toggle("active", tab === "closest");
+        tabProvider.classList.toggle("active", tab === "provider");
       }
 
       tabService.addEventListener("click", () => showTab("service"));
+      tabClosest.addEventListener("click", () => { showTab("closest"); runClosestSearch(); });
       tabProvider.addEventListener("click", () => showTab("provider"));
+
+      function getSearchOptions() {
+        const locVal = document.getElementById("service-location").value;
+        const sortBy = document.querySelector('input[name="service-sort"]:checked')?.value || "time";
+        return {
+          location: locVal || null,
+          sortBy,
+          patientLat: FIXTURES.patientProfile?.lat,
+          patientLng: FIXTURES.patientProfile?.lng,
+        };
+      }
 
       function onServiceSelect(id) {
         selectedService = id;
@@ -124,30 +173,64 @@
         runServiceSearch();
       }
 
+      function onClosestServiceSelect(id) {
+        selectedClosestService = id;
+        renderServiceCards(document.getElementById("closest-service-grid"), selectedClosestService, onClosestServiceSelect);
+        runClosestSearch();
+      }
+
       renderServiceCards(document.getElementById("service-grid"), selectedService, onServiceSelect);
+      renderServiceCards(document.getElementById("closest-service-grid"), selectedClosestService, onClosestServiceSelect);
 
       function runServiceSearch() {
         renderAvailabilityResults(
           document.getElementById("service-results"),
           selectedService,
-          document.getElementById("service-location").value
+          getSearchOptions()
         );
       }
 
+      function runClosestSearch() {
+        const zip = document.getElementById("patient-zip").value.trim();
+        const zipCoords = {
+          "11201": { lat: 40.6892, lng: -73.9857 },
+          "10017": { lat: 40.7549, lng: -73.9757 },
+          "11354": { lat: 40.758, lng: -73.8305 },
+        };
+        const coords = zipCoords[zip] || FIXTURES.patientProfile;
+        renderClosestMatch(document.getElementById("closest-results"), selectedClosestService, {
+          patientLat: coords.lat,
+          patientLng: coords.lng,
+        });
+      }
+
       document.getElementById("service-search-btn").addEventListener("click", runServiceSearch);
+      document.querySelectorAll('input[name="service-sort"]').forEach((el) => {
+        el.addEventListener("change", runServiceSearch);
+      });
+      document.getElementById("closest-search-btn").addEventListener("click", runClosestSearch);
 
       function renderProviders() {
         const spec = document.getElementById("specialty").value;
-        const list = FIXTURES.providers.filter((p) => p.specialty === spec);
+        const loc = document.getElementById("location").value;
+        let list = FIXTURES.providers.filter((p) => p.specialty === spec);
+        if (loc) list = list.filter((p) => p.location === loc);
+
+        const patient = getPatientCoords();
+        list = list.map((p) => {
+          const km = p.lat != null ? haversineKm(patient.lat, patient.lng, p.lat, p.lng) : null;
+          return { ...p, distanceKm: km, distanceLabel: formatDistanceKm(km) };
+        }).sort((a, b) => (a.distanceKm ?? Infinity) - (b.distanceKm ?? Infinity));
+
         const el = document.getElementById("provider-results");
         if (!list.length) {
-          el.innerHTML = `<div class="empty-state"><p>No providers found for ${spec}.</p><p>Try broadening your filters.</p></div>`;
+          el.innerHTML = `<div class="empty-state"><p>No providers found for ${spec}${loc ? ` at ${loc}` : ""}.</p><p>Try broadening your filters.</p></div>`;
           return;
         }
         el.innerHTML = `<p class="results-header">Providers (${list.length})</p>` +
           list.map((p) => `<div class="card">
             <h3>${p.name} · ${p.specialty}</h3>
-            <p>${p.location} · Next available: ${p.nextAvailable}</p>
+            <p>${p.location}${p.distanceLabel ? ` · ${p.distanceLabel}` : ""} · Next available: ${p.nextAvailable}</p>
             <div class="card-actions"><a href="book.html?provider=${encodeURIComponent(p.name)}" class="btn btn-primary btn-sm">View slots →</a></div>
           </div>`).join("");
       }
@@ -156,6 +239,7 @@
 
       runServiceSearch();
       if (params.get("tab") === "provider") showTab("provider");
+      if (params.get("tab") === "closest") { showTab("closest"); runClosestSearch(); }
     }
   </script>
 </body>

@@ -26,6 +26,7 @@
     <button type="button" class="btn btn-primary" id="confirm-btn" disabled style="margin-top: 16px;">Confirm booking</button>
   </main>
   <script src="../js/kaggle-fixtures.js"></script>
+  <script src="../js/demo-fixtures.js"></script>
   <script src="../js/fixtures.js"></script>
   <script src="../js/app.js"></script>
   <script src="../js/search.js"></script>
@@ -51,7 +52,10 @@
         : null;
 
       const slots = FIXTURES.slots[provider] || FIXTURES.slots["Dr. James Chen"];
-      const dateLabels = { "2025-09-08": "Mon Sep 8", "2025-09-09": "Tue Sep 9", "2025-09-10": "Wed Sep 10" };
+      const dateLabels = {
+        "2025-09-08": "Mon Sep 8", "2025-09-09": "Tue Sep 9", "2025-09-10": "Wed Sep 10",
+        "2025-09-11": "Thu Sep 11", "2025-09-12": "Fri Sep 12", "2025-09-15": "Mon Sep 15",
+      };
       const container = document.getElementById("slot-days");
       container.innerHTML = Object.entries(slots).map(([date, times]) => {
         const label = dateLabels[date] || date;

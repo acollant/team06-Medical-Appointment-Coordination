@@ -299,6 +299,7 @@ flowchart LR
 | US-3.4 | P-2 Dr. Chen (Provider) | P-3 (check-in precedes) | Provider records visit outcome |
 | US-4.1 | P-1 Maria (Patient) | — | Patient searches providers by specialty |
 | US-4.6 | P-1 Maria (Patient) | — | Patient searches open slots by clinical service (cardio, general doctor) |
+| US-4.7 | P-1 Maria (Patient) | — | Patient finds closest practitioner with availability |
 | US-4.2 | P-1 Maria (Patient) | P-3 (books on behalf) | Patient self-books; desk uses same flow |
 | US-4.3 | P-1 Maria (Patient) | — | Patient cancels/reschedules own appointments |
 | US-4.4 | P-1 Maria (Patient) | P-3 (manual re-send) | Patient receives automated reminders |
@@ -319,7 +320,7 @@ flowchart LR
 
 | Persona | Stories owned (primary) | Count |
 |---------|-------------------------|-------|
-| P-1 Maria (Patient) | US-1.1, US-1.3, US-4.1, US-4.6, US-4.2–4.5, US-7.1, US-7.2 | 10 |
+| P-1 Maria (Patient) | US-1.1, US-1.3, US-4.1, US-4.6, US-4.7, US-4.2–4.5, US-7.1, US-7.2 | 11 |
 | P-2 Dr. Chen (Provider) | US-3.1–3.4, US-7.3 | 5 |
 | P-3 Elena (FrontDesk) | US-5.1–5.5 | 5 |
 | P-4 David (Admin) | US-1.2, US-1.4, US-2.1–2.4, US-6.1–6.3 | 8 |
@@ -365,7 +366,8 @@ flowchart LR
 | ID | Persona | Story | Priority | Acceptance Criteria |
 |----|---------|-------|----------|---------------------|
 | US-4.1 | P-1 | As patient, I can search providers by specialty and location | P0 | • Filter by specialty + location returns HTTP 200 with matching providers only<br>• Empty result returns HTTP 200 with empty array and UI empty-state message<br>• Response includes provider name, specialty, location, next available slot (if any)<br>• Search p95 ≤ 500 ms (NFR-1.1) |
-| US-4.6 | P-1 | As patient, I can search appointment availability by clinical service | P0 | • `GET /api/v1/availability?service={id}&location=` returns open slots across all providers for that service<br>• Services use patient-friendly labels (e.g. "General Doctor" → Internal Medicine)<br>• Results sorted by earliest datetime; each row includes provider, time, appointment type<br>• Empty service returns HTTP 200 with empty array and UI empty-state<br>• Service filter with no matching providers returns HTTP 200 + helpful message<br>• Search p95 ≤ 500 ms (NFR-1.1) |
+| US-4.6 | P-1 | As patient, I can search appointment availability by clinical service | P0 | • `GET /api/v1/availability?service={id}&location=` returns open slots across all providers for that service<br>• Services use patient-friendly labels (e.g. "General Doctor" → Internal Medicine)<br>• Results sorted by earliest datetime; each row includes provider, time, appointment type, distance (optional)<br>• `sort=distance` re-ranks by haversine distance from patient address/ZIP<br>• Empty service returns HTTP 200 with empty array and UI empty-state<br>• Service filter with no matching providers returns HTTP 200 + helpful message<br>• Search p95 ≤ 500 ms (NFR-1.1) |
+| US-4.7 | P-1 | As patient, I can find the closest practitioner with an open slot | P0 | • `GET /api/v1/availability/closest?service={id}&lat=&lng=` (or ZIP geocode) returns nearest provider with earliest open slot<br>• Response includes practitioner name, specialty, clinic location, distance (km/mi), next slot datetime<br>• Alternatives list includes other nearby providers ranked by distance then time<br>• No slots within service returns HTTP 200 with empty result and UI empty-state<br>• Uses patient saved address from profile when lat/lng omitted<br>• Search p95 ≤ 500 ms (NFR-1.1) |
 | US-4.2 | P-1 | As patient, I can see open slots and book an appointment | P0 | • Booking available slot returns HTTP 201; slot status → `booked`; exactly one appointment per slot<br>• Concurrent double-book: one HTTP 201, one HTTP 409 (NFR-1.3)<br>• Booking past slot returns HTTP 400<br>• Booking write p95 ≤ 800 ms (NFR-1.2)<br>• Duplicate POST with same idempotency key does not create duplicate appointment (NFR-3.7) |
 | US-4.3 | P-1 | As patient, I can reschedule or cancel within policy rules | P0 | • Cancel ≥ cancellation window (default 24 h) before start: status → `cancelled`, slot → `available`, event logged<br>• Cancel inside window returns HTTP 400 with policy message; status unchanged<br>• Reschedule atomically frees old slot and books new slot in one transaction<br>• Reschedule subject to same lead-time rules as new booking |
 | US-4.4 | P-1 | As patient, I receive email/SMS reminders | P1 | • Email reminder sent once at T−24 h (clinic local time); `NotificationLog` status `sent`<br>• Cancelled appointments receive no reminder<br>• SMS deferred to Phase 2; MVP delivers email only<br>• Reminder job failure does not alter appointment record (NFR-3.6) |
@@ -433,7 +435,7 @@ Criteria in the tables above map 1:1 to test cases. Each criterion should become
 | US-1.1–1.4 | All / P-4 | P0 | API + E2E | JWT, RBAC, reset, deactivation |
 | US-2.1–2.4 | P-4 | P0 | API | CRUD validation, timezone, slot rules |
 | US-3.1–3.4 | P-2 | P0 | API + E2E | Availability, blocks, calendar, transitions |
-| US-4.1, US-4.6 | P-1 | P0 | API + E2E | Provider search + service availability search |
+| US-4.1, US-4.6, US-4.7 | P-1 | P0 | API + E2E | Provider search, service availability, closest practitioner |
 | US-4.4 | P-1 | P1 | Integration | T−24 h email reminder |
 | US-5.1–5.4 | P-3 | P0 | API + E2E | Desk booking, check-in, day view, override |
 | US-5.5 | P-3 | P1 | API | Manual reminder + cooldown |
@@ -491,7 +493,7 @@ Static, clickable HTML/CSS prototype for stakeholder review **before** backend i
 | SCR-02 | Register | All | US-1.1 | `register.html` |
 | SCR-03 | Forgot password | All | US-1.3 | `forgot-password.html` |
 | SCR-04 | Patient dashboard | P-1 | US-4.5 | `patient/dashboard.html` |
-| SCR-05 | Find availability (by service / by provider) | P-1 | US-4.1, US-4.6 | `patient/search.html` |
+| SCR-05 | Find availability (by service / closest / by provider) | P-1 | US-4.1, US-4.6, US-4.7 | `patient/search.html` |
 | SCR-06 | Select slot & book | P-1 | US-4.2, US-7.1 | `patient/book.html` |
 | SCR-07 | Booking confirmation | P-1 | US-7.1 | `patient/confirmation.html` |
 | SCR-08 | My appointments | P-1 | US-4.3, US-4.5 | `patient/appointments.html` |
@@ -728,7 +730,8 @@ flowchart TB
 | US-3.1–3.2 | SCR-10 | Add Tue 9–12 block → SCR-09 shows open slots |
 | US-3.3–3.4 | SCR-09 | Click appointment → mark Complete → badge updates |
 | US-4.1 | SCR-05 (provider tab) | Filter Cardiology → 2 results; filter Dermatology → empty state |
-| US-4.6 | SCR-05 (service tab) | Select Cardio → 5 slots; General Doctor → 4 slots; Dermatology → empty state |
+| US-4.6 | SCR-05 (service tab) | Select Cardio → 4 slots; General Doctor → 5 slots; Dermatology → 3 slots; sort by nearest |
+| US-4.7 | SCR-05 (closest tab) | General Doctor from ZIP 11201 → Dr. Robert Kim (Brooklyn); Cardio → Dr. James Chen |
 | US-4.2 | SCR-06 → SCR-07 | Select slot → Confirm → confirmation page |
 | US-4.3 | SCR-08 | Cancel button → modal → slot returns to available on SCR-06 |
 | US-4.5 | SCR-04, SCR-08 | History list matches fixture appointments |
@@ -919,7 +922,8 @@ erDiagram
 | Auth         | `POST /api/v1/auth/login`, `POST /api/v1/auth/register`     | Public                   |
 | Providers    | `GET /api/v1/providers`, `GET /api/v1/providers/{id}/slots` | Patient, Staff           |
 | Slots        | `GET /api/v1/slots?provider=&date=`                         | Patient, Staff           |
-| Availability | `GET /api/v1/availability?service=&location=`               | Patient, Staff           |
+| Availability | `GET /api/v1/availability?service=&location=&sort=`         | Patient, Staff           |
+| Closest match  | `GET /api/v1/availability/closest?service=&lat=&lng=`     | Patient                  |
 | Call records | `GET /api/v1/calls?intent=&service=`                        | FrontDesk, Admin         |
 | Appointments | `POST`, `PATCH /cancel`, `PATCH /check-in`                  | Patient, Staff, Provider |
 | Availability | CRUD on provider templates                                  | Provider, Admin          |

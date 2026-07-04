@@ -23,7 +23,11 @@ cd frontend/mockup
 python3 -m http.server 8080
 ```
 
-Open http://localhost:8080 → demo login → **Maria (Patient)** → search by **Heart / Cardio** or **General Doctor**.
+Open http://localhost:8080 → demo login → **Maria (Patient)**:
+
+- **By service** — search Heart/Cardio, General Doctor, or Skin Care across 3 clinic sites
+- **Closest to me** — find the nearest practitioner with an open slot (demo ZIP: 11201 Brooklyn)
+- Sort results by earliest time or nearest distance
 
 Front-desk: **Elena** → **Call log** to view parsed Kaggle transcripts.
 
