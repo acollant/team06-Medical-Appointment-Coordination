@@ -34,14 +34,14 @@ All project documentation and deliverables. Start with **PLAN** and **ARCHITECTU
 
 | Artifact | Description |
 |----------|-------------|
-| [**docs/PLAN.md**](docs/PLAN.md) | Master plan — personas, user stories (US-1.x–US-7.x), NFRs, acceptance criteria, UI mockup spec, test datasets, implementation phases |
+| [**docs/PLAN.md**](docs/PLAN.md) | Master plan — personas, user stories (US-1.x–US-7.x, incl. US-4.8 mobile chatbot & US-4.9 telehealth), NFRs, acceptance criteria, UI mockup spec, test datasets, implementation phases |
 | [**DEMO.md**](DEMO.md) | Client demo guide — how to run the prototype, personas, 10-minute walkthrough |
 
 ### Architecture & design
 
 | Artifact | Description |
 |----------|-------------|
-| [**docs/ARCHITECTURE.md**](docs/ARCHITECTURE.md) | Software architecture — layered design, domain model, booking/reminder flows, API surface, mobile chatbot, deployment, tech decisions |
+| [**docs/ARCHITECTURE.md**](docs/ARCHITECTURE.md) | Software architecture — layered design, domain model, booking/reminder/**telehealth** flows, API surface, mobile chatbot, deployment, tech decisions |
 | [docs/PLAN.md § UI Mockup Solution](docs/PLAN.md#ui-mockup-solution) | Screen inventory (SCR-01–SCR-17), wireframes, design tokens, navigation map |
 | [docs/PLAN.md § Software Architecture](docs/PLAN.md#software-architecture) | Summary diagrams (also expanded in ARCHITECTURE.md) |
 
@@ -80,6 +80,7 @@ All project documentation and deliverables. Start with **PLAN** and **ARCHITECTU
 | [`frontend/mockup/js/kaggle-fixtures.js`](frontend/mockup/js/kaggle-fixtures.js) | Kaggle call-dataset services & call records |
 | [`frontend/mockup/js/search.js`](frontend/mockup/js/search.js) | Availability & closest-practitioner search |
 | [`frontend/mockup/js/chatbot.js`](frontend/mockup/js/chatbot.js) | Mobile patient chatbot |
+| [`frontend/mockup/js/telehealth.js`](frontend/mockup/js/telehealth.js) | Call doctor + online visit fallback (US-4.9) |
 | [`frontend/mockup/js/reminders.js`](frontend/mockup/js/reminders.js) | T−24 h reminders & notification log |
 
 ---
@@ -114,6 +115,7 @@ team06-Medical-Appointment-Coordination/
 | Service availability search | US-4.6 | Patient → Book → By service |
 | Closest practitioner | US-4.7 | Patient → Closest to me tab |
 | Mobile chatbot booking | US-4.8 | **Maria · Mobile app** → Chat |
+| Telehealth fallback (call / online) | US-4.9 | **Maria · Mobile app** → Book → **Skin Care** |
 | Appointment reminders | US-7.2, US-4.4 | Appointments → Simulate 24h reminders |
 | Front-desk call log | US-5.1 | Elena → Call log |
 | Manual reminder send | US-5.5 | Elena → Check-in → Send reminder |

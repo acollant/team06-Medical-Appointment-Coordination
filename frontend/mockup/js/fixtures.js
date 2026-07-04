@@ -142,6 +142,7 @@ function applyDemoFixtures() {
   if (DEMO_FIXTURES.appointments) FIXTURES.appointments = DEMO_FIXTURES.appointments;
   if (DEMO_FIXTURES.deskSchedule) FIXTURES.deskSchedule = DEMO_FIXTURES.deskSchedule;
   if (DEMO_FIXTURES.demoStats) FIXTURES.demoStats = DEMO_FIXTURES.demoStats;
+  if (DEMO_FIXTURES.onlineMeetingsByService) FIXTURES.onlineMeetingsByService = DEMO_FIXTURES.onlineMeetingsByService;
 }
 
 applyKaggleFixtures();

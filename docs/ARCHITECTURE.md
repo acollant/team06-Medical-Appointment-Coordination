@@ -6,7 +6,7 @@
 **Phase 0 (current):** Static HTML mockup + Python prototype server with mock API  
 **Phase 1+:** Production implementation per this document
 
-See also: [PLAN.md](PLAN.md) (user stories, NFRs, datasets) · [prototype/README.md](../prototype/README.md) (run locally)
+See also: [PLAN.md](PLAN.md) (user stories **US-4.8**, **US-4.9**, NFRs, datasets) · [prototype/README.md](../prototype/README.md) (run locally)
 
 ---
 
@@ -42,7 +42,7 @@ flowchart LR
 
 | Actor | Channels | Primary capabilities |
 |-------|----------|-------------------|
-| **Patient (P-1)** | Desktop web, mobile web/PWA, chatbot | Search availability, closest practitioner, book/cancel, reminders |
+| **Patient (P-1)** | Desktop web, mobile web/PWA, chatbot | Search availability, closest practitioner, book/cancel, **telehealth fallback (call / online visit)**, reminders |
 | **Provider (P-2)** | Desktop web | Availability templates, calendar, visit outcomes |
 | **Front desk (P-3)** | Desktop web | Day view, walk-in booking, check-in, call log, manual reminder |
 | **Admin (P-4)** | Desktop web | Locations, users, booking rules, reports |
@@ -68,6 +68,7 @@ flowchart TB
   subgraph domain [Domain layer]
     Scheduling[SchedulingService]
     Availability[AvailabilityService]
+    Telehealth[TelehealthService]
     Notification[NotificationService]
     GeoSearch[GeoSearchService]
     Audit[AuditService]
@@ -89,11 +90,13 @@ flowchart TB
   DRF --> Auth
   DRF --> Scheduling
   DRF --> Availability
+  DRF --> Telehealth
   DRF --> Notification
   DRF --> GeoSearch
   DRF --> Audit
   Scheduling --> PG
   Availability --> PG
+  Telehealth --> PG
   Audit --> PG
   Notification --> Celery
   Celery --> Redis
@@ -142,6 +145,23 @@ erDiagram
   Appointment ||--o{ NotificationLog : triggers
   CallRecord }o--o| Appointment : source_call
 
+  Appointment {
+    string booking_channel
+    string meeting_url
+    string meeting_id
+    string modality
+  }
+
+  ProviderProfile {
+    string phone
+    bool telehealth_enabled
+  }
+
+  Slot {
+    string modality
+    string status
+  }
+
   NotificationLog {
     string type
     string channel
@@ -155,9 +175,10 @@ erDiagram
 
 | Entity | Purpose |
 |--------|---------|
-| **Slot** | Atomic bookable unit — `available \| held \| booked \| blocked` |
-| **Appointment** | Patient + slot + type — `scheduled \| checked_in \| completed \| cancelled \| no_show` |
+| **Slot** | Atomic bookable unit — `available \| held \| booked \| blocked`; **modality:** `in_person \| telehealth` |
+| **Appointment** | Patient + slot + type — `scheduled \| checked_in \| completed \| cancelled \| no_show`; **`booking_channel`:** includes `telehealth`, `mobile_chat`; telehealth stores `meeting_url` |
 | **Service** | Patient-facing care category (cardio, general, dermatology) with IVR mapping |
+| **ProviderProfile** | Specialty, location, **phone**, **`telehealth_enabled`** — used for call-doctor fallback |
 | **CallRecord** | Phone/IVR transcript metadata (Kaggle dataset alignment) |
 | **NotificationLog** | Confirmation and reminder delivery audit — `queued \| sent \| failed` |
 | **AppointmentEvent** | Immutable state-change trail |
@@ -188,6 +209,61 @@ sequenceDiagram
 **Closest practitioner:** group slots by provider → earliest slot per provider → sort by haversine distance, then time.
 
 **Prototype:** `frontend/mockup/js/search.js` + `GET /api/v1/availability/closest` in `prototype/server.py`.
+
+### Telehealth fallback (US-4.9)
+
+When in-person search returns zero slots, the mobile chatbot must not dead-end — it offers **call the doctor** or **book an online video visit** (mirrors Kaggle call 005: dermatology fully booked).
+
+```mermaid
+sequenceDiagram
+  participant Patient
+  participant Chat as Chatbot
+  participant Avail as AvailabilityService
+  participant Tele as TelehealthService
+  participant API
+  participant Queue as Celery
+
+  Patient->>Chat: Book by service (e.g. Skin Care)
+  Chat->>Avail: find_open_slots(service, modality=in_person)
+  Avail-->>Chat: []
+
+  Chat-->>Patient: No in-person slots — Call doctor or Book online
+
+  alt Call doctor
+    Patient->>Chat: Call Dr. Wong
+    Chat->>Tele: get_primary_provider(service)
+    Tele-->>Chat: provider.phone
+    Chat-->>Patient: tel: link (device dialer)
+  else Book online visit
+    Patient->>Chat: Book online meeting
+    Chat->>Tele: find_online_slots(service)
+    Tele-->>Chat: slots with meeting_url, meeting_id
+    Patient->>Chat: Confirm
+    Chat->>API: POST /appointments/ {slot_id, booking_channel=telehealth}
+    API->>Queue: send_confirmation (includes meeting_url)
+    API-->>Chat: 201
+    Chat-->>Patient: Booked + join link
+  end
+```
+
+| Step | Production | Phase 0 prototype |
+|------|------------|-------------------|
+| Detect empty in-person | `AvailabilityService` returns `[]` | `searchAvailabilityByService()` → `[]` |
+| Provider phone | `ProviderProfile.phone` | `demo-fixtures.js` providers |
+| Online slots | `TelehealthService.find_online_slots()` | `getOnlineMeetings()` in `telehealth.js` |
+| Chat UX | React mobile PWA | `showNoAvailabilityFallback()` in `chatbot.js` |
+| Book telehealth | Same `SchedulingService.create_appointment()` with `modality=telehealth` | `completeOnlineBooking()` → localStorage |
+
+**TelehealthService (planned):**
+
+```python
+# backend/apps/scheduling/telehealth.py (planned)
+
+class TelehealthService:
+    def get_primary_provider(self, service_id: str) -> ProviderProfile: ...
+    def find_online_slots(self, service_id: str) -> list[Slot]: ...
+    def provision_meeting_url(self, appointment_id: int) -> str: ...  # Phase 2: Zoom/Teams integration
+```
 
 ### Booking with concurrency (US-4.2)
 
@@ -223,6 +299,7 @@ sequenceDiagram
 | Event | Channel | Timing | Idempotency key |
 |-------|---------|--------|-----------------|
 | Booking confirmed | Email | Within 5 s of HTTP 201 | `confirm:{appointment_id}` |
+| Telehealth booking confirmed | Email | Within 5 s; body includes **meeting_url** | `confirm:{appointment_id}` |
 | Appointment reminder | Email (+ push Phase 2) | T−24 h clinic local time | `reminder:{appointment_id}` |
 | Manual re-send | Email | On staff action | `manual:{appointment_id}:{hour_bucket}` |
 | Provider cancel alert | Email | On patient cancel | `provider_cancel:{appointment_id}` |
@@ -276,19 +353,22 @@ class NotificationService:
 
 ---
 
-## 6. Mobile patient channel (US-4.8)
+## 6. Mobile patient channel (US-4.8, US-4.9)
 
 ```mermaid
 flowchart LR
   Mobile[mobile.html] --> Chat[Chatbot engine]
   Chat --> Search[search.js]
+  Chat --> Telehealth[telehealth.js]
   Chat --> Reminders[reminders.js]
   Search --> Fixtures[demo-fixtures.js]
+  Telehealth --> Fixtures
   Reminders --> LocalStore[localStorage NotificationLog]
 ```
 
 - **Mobile-first** layout (`css/mobile.css`), max-width 480px, bottom tab bar.
-- **Chatbot** handles book, nearest doctor, list/cancel — uses same domain functions as desktop search.
+- **Chatbot (US-4.8)** handles book, nearest doctor, list/cancel — uses same domain functions as desktop search.
+- **Telehealth fallback (US-4.9):** when `searchAvailabilityByService()` or `findClosestPractitioner()` returns no in-person slots, `showNoAvailabilityFallback()` offers call-doctor (`tel:`) and online meeting booking; online appointments use `bookingChannel: "telehealth"`.
 - **Push reminders (Phase 2):** service worker + Web Push; Phase 0 simulates with in-app banner and email log.
 
 ---
@@ -300,6 +380,7 @@ flowchart LR
 | Health | GET | `/api/v1/health` | Public |
 | Auth | POST | `/api/v1/auth/login` | Public |
 | Availability | GET | `/api/v1/availability?service=&sort=` | Patient, Staff |
+| Online availability | GET | `/api/v1/availability/online?service=` | Patient |
 | Closest | GET | `/api/v1/availability/closest?service=&lat=&lng=` | Patient |
 | Appointments | POST | `/api/v1/appointments/` | Patient, Staff |
 | Appointments | PATCH | `/api/v1/appointments/{id}/cancel` | Patient, Staff |
@@ -333,7 +414,8 @@ team06-Medical-Appointment-Coordination/
 │   │   ├── patient/mobile.html # Mobile + chatbot
 │   │   └── js/
 │   │       ├── search.js
-│   │       ├── chatbot.js
+│   │       ├── telehealth.js   # US-4.9 call + online fallback
+│   │       ├── chatbot.js      # US-4.8 mobile chatbot
 │   │       └── reminders.js
 │   └── src/                    # Phase 1 React SPA
 ├── data/
@@ -393,7 +475,7 @@ flowchart LR
 
 | Phase | Scope | Status |
 |-------|-------|--------|
-| **0** | HTML mockup, mobile chatbot, mock API, Kaggle pipeline | ✅ Current |
+| **0** | HTML mockup, mobile chatbot, **telehealth fallback**, mock API, Kaggle pipeline | ✅ Current |
 | **1** | Django models, JWT auth, seed data | Planned |
 | **2** | Slot generation, booking API, React patient/provider UI | Planned |
 | **3** | Front-desk flows, admin config | Planned |
@@ -410,5 +492,6 @@ flowchart LR
 | Task queue | Celery + Redis | Reminder scheduling, email isolation |
 | Reminder scheduler | django-celery-beat | Cron-style T−24 h jobs per clinic TZ |
 | Frontend | React 18 + TypeScript + Vite | Typed SPA, component reuse from mockup |
-| Mobile | Responsive PWA + chatbot | Maria persona; smartphone-first booking |
+| Mobile | Responsive PWA + chatbot + telehealth fallback | Maria persona; smartphone-first booking; US-4.8 / US-4.9 |
+| Telehealth | Video visit slots + meeting URLs | Phase 0 fixtures; Phase 2 vendor integration (Zoom/Teams) optional |
 | Dev dataset | Kaggle call transcripts + demo fixtures | Aligns with course dataset requirement |

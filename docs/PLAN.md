@@ -211,8 +211,8 @@ Four roles map to system user types. Each has a profile for design and test-data
 |-----------|--------|
 | **Role** | `Patient` |
 | **Age / context** | 34, employed full-time; occasionally books for her elderly mother |
-| **Goals** | Find the right specialist, book online without calling, get reminders, cancel/reschedule easily |
-| **Pain points** | Long phone hold times, unclear available slots, missed appointments due to no reminders |
+| **Goals** | Find the right specialist, book online without calling, get reminders, cancel/reschedule easily; when in-person slots are full, reach the doctor by phone or video |
+| **Pain points** | Long phone hold times, unclear available slots, dead-end IVR when a specialty is booked out (e.g. dermatology), missed appointments due to no reminders |
 | **Tech comfort** | High — uses smartphone daily; expects mobile-friendly booking |
 | **Test account** | `maria.santos@example.com` |
 
@@ -303,6 +303,7 @@ flowchart LR
 | US-4.6 | P-1 Maria (Patient) | — | Patient searches open slots by clinical service (cardio, general doctor) |
 | US-4.7 | P-1 Maria (Patient) | — | Patient finds closest practitioner with availability |
 | US-4.8 | P-1 Maria (Patient) | — | Patient uses mobile app with chatbot assistant for booking |
+| US-4.9 | P-1 Maria (Patient) | — | Patient calls doctor or books online visit when no in-person slots |
 | US-4.2 | P-1 Maria (Patient) | P-3 (books on behalf) | Patient self-books; desk uses same flow |
 | US-4.3 | P-1 Maria (Patient) | — | Patient cancels/reschedules own appointments |
 | US-4.4 | P-1 Maria (Patient) | P-3 (manual re-send) | Patient receives automated reminders |
@@ -323,7 +324,7 @@ flowchart LR
 
 | Persona | Stories owned (primary) | Count |
 |---------|-------------------------|-------|
-| P-1 Maria (Patient) | US-1.1, US-1.3, US-4.1, US-4.6, US-4.7, US-4.8, US-4.2–4.5, US-7.1, US-7.2 | 12 |
+| P-1 Maria (Patient) | US-1.1, US-1.3, US-4.1, US-4.6, US-4.7, US-4.8, US-4.9, US-4.2–4.5, US-7.1, US-7.2 | 13 |
 | P-2 Dr. Chen (Provider) | US-3.1–3.4, US-7.3 | 5 |
 | P-3 Elena (FrontDesk) | US-5.1–5.5 | 5 |
 | P-4 David (Admin) | US-1.2, US-1.4, US-2.1–2.4, US-6.1–6.3 | 8 |
@@ -366,13 +367,16 @@ flowchart LR
 
 ### Epic 4 — Patient self-service booking
 
+**Story dependencies:** US-4.9 (telehealth fallback) is triggered when US-4.6 / US-4.7 return no in-person slots; primary UX is US-4.8 mobile chatbot. US-4.2 booking rules apply to both in-person and telehealth slots. US-7.1 / US-7.2 notifications include video join links for telehealth appointments.
+
 | ID | Persona | Story | Priority | Acceptance Criteria |
 |----|---------|-------|----------|---------------------|
 | US-4.1 | P-1 | As patient, I can search providers by specialty and location | P0 | • Filter by specialty + location returns HTTP 200 with matching providers only<br>• Empty result returns HTTP 200 with empty array and UI empty-state message<br>• Response includes provider name, specialty, location, next available slot (if any)<br>• Search p95 ≤ 500 ms (NFR-1.1) |
-| US-4.6 | P-1 | As patient, I can search appointment availability by clinical service | P0 | • `GET /api/v1/availability?service={id}&location=` returns open slots across all providers for that service<br>• Services use patient-friendly labels (e.g. "General Doctor" → Internal Medicine)<br>• Results sorted by earliest datetime; each row includes provider, time, appointment type, distance (optional)<br>• `sort=distance` re-ranks by haversine distance from patient address/ZIP<br>• Empty service returns HTTP 200 with empty array and UI empty-state<br>• Service filter with no matching providers returns HTTP 200 + helpful message<br>• Search p95 ≤ 500 ms (NFR-1.1) |
-| US-4.7 | P-1 | As patient, I can find the closest practitioner with an open slot | P0 | • `GET /api/v1/availability/closest?service={id}&lat=&lng=` (or ZIP geocode) returns nearest provider with earliest open slot<br>• Response includes practitioner name, specialty, clinic location, distance (km/mi), next slot datetime<br>• Alternatives list includes other nearby providers ranked by distance then time<br>• No slots within service returns HTTP 200 with empty result and UI empty-state<br>• Uses patient saved address from profile when lat/lng omitted<br>• Search p95 ≤ 500 ms (NFR-1.1) |
-| US-4.8 | P-1 | As patient, I can book and manage appointments via a mobile chatbot | P0 | • Mobile web/PWA layout (max-width 480px, bottom nav, safe-area insets)<br>• Chatbot handles: book by service, nearest doctor, list appointments, cancel<br>• Quick-reply chips and in-chat slot cards; natural-language intents for book/cancel/nearest<br>• Booking via chat creates appointment with `booking_channel=mobile_chat`<br>• Chat state syncs with appointment list on Home and Visits tabs<br>• WCAG touch targets ≥ 44px; works offline for read-only fixture data (Phase 0 mockup) |
-| US-4.2 | P-1 | As patient, I can see open slots and book an appointment | P0 | • Booking available slot returns HTTP 201; slot status → `booked`; exactly one appointment per slot<br>• Concurrent double-book: one HTTP 201, one HTTP 409 (NFR-1.3)<br>• Booking past slot returns HTTP 400<br>• Booking write p95 ≤ 800 ms (NFR-1.2)<br>• Duplicate POST with same idempotency key does not create duplicate appointment (NFR-3.7) |
+| US-4.6 | P-1 | As patient, I can search appointment availability by clinical service | P0 | • `GET /api/v1/availability?service={id}&location=` returns open **in-person** slots across all providers for that service<br>• Services use patient-friendly labels (e.g. "General Doctor" → Internal Medicine)<br>• Results sorted by earliest datetime; each row includes provider, time, appointment type, distance (optional)<br>• `sort=distance` re-ranks by haversine distance from patient address/ZIP<br>• Empty service returns HTTP 200 with empty array; **mobile chatbot triggers US-4.9 telehealth fallback** instead of dead-end<br>• Service filter with no matching providers returns HTTP 200 + helpful message<br>• Search p95 ≤ 500 ms (NFR-1.1) |
+| US-4.7 | P-1 | As patient, I can find the closest practitioner with an open slot | P0 | • `GET /api/v1/availability/closest?service={id}&lat=&lng=` (or ZIP geocode) returns nearest provider with earliest open **in-person** slot<br>• Response includes practitioner name, specialty, clinic location, distance (km/mi), next slot datetime<br>• Alternatives list includes other nearby providers ranked by distance then time<br>• No in-person slots returns HTTP 200 with empty result; **mobile chatbot offers US-4.9** (call doctor / online visit)<br>• Uses patient saved address from profile when lat/lng omitted<br>• Search p95 ≤ 500 ms (NFR-1.1) |
+| US-4.8 | P-1 | As patient, I can book and manage appointments via a mobile chatbot | P0 | • Mobile web/PWA layout (max-width 480px, bottom nav, safe-area insets)<br>• Chatbot handles: book by service, nearest doctor, list appointments, cancel<br>• When in-person search is empty, chatbot routes to **US-4.9** telehealth fallback (call / online meeting)<br>• Quick-reply chips and in-chat slot cards; natural-language intents for book/cancel/nearest/call/online<br>• In-person booking via chat creates appointment with `booking_channel=mobile_chat`<br>• Chat state syncs with appointment list on Home and Visits tabs<br>• WCAG touch targets ≥ 44px; works offline for read-only fixture data (Phase 0 mockup) |
+| US-4.9 | P-1 | As patient, when no in-person slots exist I can call my doctor or book an online video visit | P0 | • Triggered when US-4.6 / US-4.7 return zero in-person slots (mobile chatbot primary channel; desktop Phase 2)<br>• **Call doctor** opens device dialer with primary provider phone (`tel:` link); toast confirms action<br>• **Book online meeting** lists telehealth slots from `GET /api/v1/availability/online?service=` (prototype: `onlineMeetingsByService` fixture)<br>• Online booking creates appointment with `booking_channel=telehealth`, `location=Online video visit`, `meeting_url`, optional `meeting_id`<br>• Confirmation email includes video join link; T−24 h reminder queued (same as in-person, US-7.1 / US-7.2)<br>• Demo: Skin Care has no in-person slots (Kaggle call 005) → Dr. Lisa Wong call + online slots |
+| US-4.2 | P-1 | As patient, I can see open slots and book an appointment | P0 | • Booking available slot returns HTTP 201; slot status → `booked`; exactly one appointment per slot<br>• Supports `modality=in_person \| telehealth`; telehealth slots may omit physical `location_id`<br>• Concurrent double-book: one HTTP 201, one HTTP 409 (NFR-1.3)<br>• Booking past slot returns HTTP 400<br>• Booking write p95 ≤ 800 ms (NFR-1.2)<br>• Duplicate POST with same idempotency key does not create duplicate appointment (NFR-3.7) |
 | US-4.3 | P-1 | As patient, I can reschedule or cancel within policy rules | P0 | • Cancel ≥ cancellation window (default 24 h) before start: status → `cancelled`, slot → `available`, event logged<br>• Cancel inside window returns HTTP 400 with policy message; status unchanged<br>• Reschedule atomically frees old slot and books new slot in one transaction<br>• Reschedule subject to same lead-time rules as new booking |
 | US-4.4 | P-1 | As patient, I receive email/SMS reminders | P1 | • Email reminder sent once at T−24 h (clinic local time); `NotificationLog` status `sent`<br>• Cancelled appointments receive no reminder<br>• SMS deferred to Phase 2; MVP delivers email only<br>• Reminder job failure does not alter appointment record (NFR-3.6) |
 | US-4.5 | P-1 | As patient, I can view my appointment history | P0 | • List returns only calling patient's appointments, sorted by date descending<br>• Each row: provider, location, type, status, datetime (clinic TZ)<br>• Access to another patient's appointment ID returns HTTP 403<br>• Includes upcoming and past appointments with correct status labels |
@@ -405,7 +409,7 @@ flowchart LR
 
 | ID | Persona | Story | Priority | Acceptance Criteria |
 |----|---------|-------|----------|---------------------|
-| US-7.1 | P-1 | As patient, I get confirmation when I book | P0 | • Confirmation email queued within 5 s of HTTP 201 booking response<br>• Email body includes date, time, provider, location, cancellation link<br>• `NotificationLog` transitions `queued` → `sent` (or `failed` with retry)<br>• Booking succeeds with HTTP 201 even if Celery broker is down; notification retried on recovery (NFR-3.6) |
+| US-7.1 | P-1 | As patient, I get confirmation when I book | P0 | • Confirmation email queued within 5 s of HTTP 201 booking response<br>• Email body includes date, time, provider, location (or **video join link** for `booking_channel=telehealth`), cancellation link<br>• `NotificationLog` transitions `queued` → `sent` (or `failed` with retry)<br>• Booking succeeds with HTTP 201 even if Celery broker is down; notification retried on recovery (NFR-3.6) |
 | US-7.2 | P-1 | As patient, I get a reminder 24 h before | P0 | • Exactly one reminder email per appointment at T−24 h clinic local time<br>• Duplicate job runs do not send second email (idempotent job key)<br>• DST boundaries handled using clinic timezone, not naive UTC offset<br>• Cancelled/rescheduled appointments excluded from reminder batch |
 | US-7.3 | P-2 | As provider, I am notified when a patient cancels | P1 | • Patient cancel within policy triggers provider email with freed slot datetime and patient name<br>• `NotificationLog` records provider notification with appointment ID<br>• Provider marking `no_show` after visit does not trigger cancellation email<br>• Provider with no email on file logs `failed` but does not block cancel transaction |
 
@@ -417,7 +421,7 @@ flowchart LR
 
 Include Epics **1, 2, 3, 4, 5, 7** at **P0** priority, plus **P1** items (US-4.4 email-only, US-5.5, US-7.3):
 
-- **In (P0):** Auth/roles, clinic setup, provider schedules, patient booking/cancel/reschedule/history, front-desk booking + check-in + day view + override, booking confirmation email, 24 h reminder
+- **In (P0):** Auth/roles, clinic setup, provider schedules, patient booking/cancel/reschedule/history, **mobile chatbot (US-4.8) + telehealth fallback (US-4.9)**, front-desk booking + check-in + day view + override, booking confirmation email, 24 h reminder
 - **In (P1):** Patient email reminders (US-4.4), desk manual reminder re-send, provider cancel notification
 - **Out (P2):** SMS, admin reports/export/booking rules (Epic 6), multi-clinic, waitlist, FHIR export, no-show prediction
 
@@ -440,6 +444,7 @@ Criteria in the tables above map 1:1 to test cases. Each criterion should become
 | US-2.1–2.4 | P-4 | P0 | API | CRUD validation, timezone, slot rules |
 | US-3.1–3.4 | P-2 | P0 | API + E2E | Availability, blocks, calendar, transitions |
 | US-4.1, US-4.6, US-4.7 | P-1 | P0 | API + E2E | Provider search, service availability, closest practitioner |
+| US-4.8, US-4.9 | P-1 | P0 | E2E | Mobile chatbot book/cancel; empty in-person → call doctor / online visit |
 | US-4.4 | P-1 | P1 | Integration | T−24 h email reminder |
 | US-5.1–5.4 | P-3 | P0 | API + E2E | Desk booking, check-in, day view, override |
 | US-5.5 | P-3 | P1 | API | Manual reminder + cooldown |
@@ -497,7 +502,7 @@ Static, clickable HTML/CSS prototype for stakeholder review **before** backend i
 | SCR-02 | Register | All | US-1.1 | `register.html` |
 | SCR-03 | Forgot password | All | US-1.3 | `forgot-password.html` |
 | SCR-04 | Patient dashboard | P-1 | US-4.5 | `patient/dashboard.html` |
-| SCR-04b | Patient mobile app (chatbot) | P-1 | US-4.8, US-4.6, US-4.7 | `patient/mobile.html` |
+| SCR-04b | Patient mobile app (chatbot) | P-1 | US-4.8, US-4.9, US-4.6, US-4.7 | `patient/mobile.html` |
 | SCR-05 | Find availability (by service / closest / by provider) | P-1 | US-4.1, US-4.6, US-4.7 | `patient/search.html` |
 | SCR-06 | Select slot & book | P-1 | US-4.2, US-7.1 | `patient/book.html` |
 | SCR-07 | Booking confirmation | P-1 | US-7.1 | `patient/confirmation.html` |
@@ -735,8 +740,9 @@ flowchart TB
 | US-3.1–3.2 | SCR-10 | Add Tue 9–12 block → SCR-09 shows open slots |
 | US-3.3–3.4 | SCR-09 | Click appointment → mark Complete → badge updates |
 | US-4.1 | SCR-05 (provider tab) | Filter Cardiology → 2 results; filter Dermatology → empty state |
-| US-4.6 | SCR-05 (service tab) | Select Cardio → 4 slots; General Doctor → 5 slots; Dermatology → 3 slots; sort by nearest |
+| US-4.6 | SCR-05 (service tab) | Select Cardio → 4 slots; General Doctor → 5 slots; Skin Care → no in-person slots (see US-4.9); sort by nearest |
 | US-4.8 | SCR-04b (mobile chat) | Tap Book → General Doctor → book slot; type "nearest cardio"; cancel via chat |
+| US-4.9 | SCR-04b (mobile chat) | Tap Book → Skin Care → no in-person slots → Call Dr. Wong or Book online meeting → confirm |
 | US-4.7 | SCR-05 (closest tab) | General Doctor from ZIP 11201 → Dr. Robert Kim (Brooklyn); Cardio → Dr. James Chen |
 | US-4.2 | SCR-06 → SCR-07 | Select slot → Confirm → confirmation page |
 | US-4.3 | SCR-08 | Cancel button → modal → slot returns to available on SCR-06 |
@@ -765,12 +771,16 @@ frontend/mockup/
 │   └── layout.css          # AppShell, grid
 ├── js/
 │   ├── app.js              # Navigation, toasts, modals
-│   ├── fixtures.js         # Loads inline mock data
+│   ├── fixtures.js         # Loads Kaggle + demo fixtures
+│   ├── demo-fixtures.js    # Locations, providers, slots, online meetings
+│   ├── search.js           # Availability + closest practitioner
+│   ├── telehealth.js       # Call doctor + online visit fallback (US-4.9)
+│   ├── chatbot.js          # Mobile chatbot (US-4.8)
+│   ├── reminders.js        # NotificationLog + T−24 h reminders
 │   └── role-router.js      # Demo persona routing
-├── data/
-│   └── fixtures.json
 ├── patient/
 │   ├── dashboard.html
+│   ├── mobile.html         # SCR-04b — mobile PWA + chatbot
 │   ├── search.html
 │   ├── book.html
 │   ├── confirmation.html
@@ -800,6 +810,7 @@ frontend/mockup/
 flowchart TB
   subgraph client [Client Layer]
     ReactApp[React SPA]
+    MobilePWA[Mobile PWA + chatbot]
   end
 
   subgraph api [API Layer]
@@ -809,6 +820,8 @@ flowchart TB
 
   subgraph domain [Domain Layer]
     Scheduling[Scheduling Service]
+    Availability[Availability Service]
+    Telehealth[Telehealth Service]
     Notification[Notification Service]
     Audit[Audit Service]
   end
@@ -823,11 +836,16 @@ flowchart TB
   end
 
   ReactApp -->|HTTPS JSON| DRF
+  MobilePWA -->|HTTPS JSON| DRF
   DRF --> Auth
   DRF --> Scheduling
+  DRF --> Availability
+  DRF --> Telehealth
   DRF --> Notification
   DRF --> Audit
   Scheduling --> PG
+  Availability --> PG
+  Telehealth --> PG
   Audit --> PG
   Notification --> Celery
   Celery --> Redis
@@ -858,6 +876,41 @@ sequenceDiagram
   API-->>React: 201 Created
   React-->>Patient: Confirmation screen
 ```
+
+### Request flow — telehealth fallback (US-4.9)
+
+When in-person availability is empty, the mobile chatbot offers call-the-doctor or online video booking instead of a dead end (aligned with Kaggle call 005 — dermatology fully booked).
+
+```mermaid
+sequenceDiagram
+  participant Patient
+  participant Chat as Mobile chatbot
+  participant Avail as AvailabilityService
+  participant Tele as TelehealthService
+  participant API as DRF API
+  participant Queue as Celery
+
+  Patient->>Chat: Book Skin Care
+  Chat->>Avail: find_open_slots(dermatology, in_person)
+  Avail-->>Chat: empty array
+  Chat-->>Patient: Call Dr. Wong OR Book online meeting
+
+  alt Call doctor
+    Patient->>Chat: Call Dr. Wong
+    Chat-->>Patient: tel:+1-212-555-0188 (device dialer)
+  else Book online visit
+    Patient->>Chat: Book online meeting
+    Chat->>Tele: find_online_slots(dermatology)
+    Tele-->>Chat: video slots + meeting URLs
+    Patient->>Chat: Confirm online visit
+    Chat->>API: POST /appointments/ {slot_id, modality=telehealth}
+    API->>Queue: send_confirmation.delay (includes meeting_url)
+    API-->>Chat: 201 Created
+    Chat-->>Patient: Booked — join link sent
+  end
+```
+
+**Prototype:** `frontend/mockup/js/telehealth.js` + `chatbot.js` → `showNoAvailabilityFallback()`.
 
 
 
@@ -910,15 +963,32 @@ erDiagram
 
   Appointment ||--{ AppointmentEvent : logs
   Appointment ||--o{ NotificationLog : triggers
+
+  Appointment {
+    string booking_channel
+    string meeting_url
+    string meeting_id
+    string modality
+  }
+
+  ProviderProfile {
+    string phone
+    bool telehealth_enabled
+  }
+
+  Slot {
+    string modality
+  }
 ```
 
 
 
 **Key entities:**
 
-- **Slot** — atomic bookable unit (provider + location + start/end + status: `available | held | booked | blocked`)
-- **Appointment** — links patient, slot, type, status: `scheduled | checked_in | completed | cancelled | no_show`
+- **Slot** — atomic bookable unit (provider + start/end + status: `available | held | booked | blocked`; **modality:** `in_person | telehealth`)
+- **Appointment** — links patient, slot, type, status: `scheduled | checked_in | completed | cancelled | no_show`; **`booking_channel`:** `web | phone | mobile_chat | telehealth | walk_in`; telehealth includes `meeting_url`
 - **AppointmentEvent** — immutable audit trail (who changed what, when)
+- **ProviderProfile** — includes clinic phone and `telehealth_enabled` for fallback routing
 
 ### API design (REST, versioned)
 
@@ -929,6 +999,7 @@ erDiagram
 | Providers    | `GET /api/v1/providers`, `GET /api/v1/providers/{id}/slots` | Patient, Staff           |
 | Slots        | `GET /api/v1/slots?provider=&date=`                         | Patient, Staff           |
 | Availability | `GET /api/v1/availability?service=&location=&sort=`         | Patient, Staff           |
+| Online availability | `GET /api/v1/availability/online?service=`           | Patient                  |
 | Closest match  | `GET /api/v1/availability/closest?service=&lat=&lng=`     | Patient                  |
 | Call records | `GET /api/v1/calls?intent=&service=`                        | FrontDesk, Admin         |
 | Appointments | `POST`, `PATCH /cancel`, `PATCH /check-in`                  | Patient, Staff, Provider |

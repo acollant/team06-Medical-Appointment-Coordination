@@ -1,10 +1,12 @@
-/* Mobile patient chatbot — Our Clinic assistant (US-4.8) */
+/* Mobile patient chatbot — Our Clinic assistant (US-4.8, US-4.9) */
 
 const CHATBOT = {
   state: "idle",
   pendingSlot: null,
+  pendingOnlineSlot: null,
   pendingServiceId: null,
   lastSlots: [],
+  lastOnlineSlots: [],
 };
 
 function chatFirstName() {
@@ -39,11 +41,14 @@ function chatBotReply(messagesEl, text, options = {}) {
         `<button type="button" class="chat-chip" data-chat-action="${q.id}">${escapeHtml(q.label)}</button>`
       ).join("")}</div>` : ""}
       ${cards.length ? `<div class="chat-cards">${cards.map((c, i) =>
-        `<div class="chat-card">
+        `<div class="chat-card${c.highlight ? " chat-card-highlight" : ""}">
           <strong>${escapeHtml(c.title)}</strong>
           <p>${escapeHtml(c.subtitle)}</p>
           ${c.meta ? `<p class="chat-card-meta">${escapeHtml(c.meta)}</p>` : ""}
-          ${c.action ? `<button type="button" class="chat-card-btn" data-chat-action="${c.action}" data-slot-index="${i}">${escapeHtml(c.actionLabel || "Select")}</button>` : ""}
+          <div class="chat-card-actions">
+            ${c.action ? `<button type="button" class="chat-card-btn" data-chat-action="${c.action}" data-slot-index="${i}">${escapeHtml(c.actionLabel || "Select")}</button>` : ""}
+            ${c.secondaryAction ? `<button type="button" class="chat-card-btn chat-card-btn-secondary" data-chat-action="${c.secondaryAction}">${escapeHtml(c.secondaryLabel || "Call")}</button>` : ""}
+          </div>
         </div>`
       ).join("")}</div>` : ""}
     </div>`;
@@ -98,6 +103,16 @@ function handleChatAction(action, slotIndex = null) {
     chatUserReply(messagesEl, getServiceById(action.replace("service_", ""))?.patientLabel || action);
   } else if (action.startsWith("book_slot_")) {
     chatUserReply(messagesEl, "Book this slot");
+  } else if (action.startsWith("book_online_")) {
+    chatUserReply(messagesEl, "Book online visit");
+  } else if (action.startsWith("call_doctor_")) {
+    const svc = getServiceById(action.replace("call_doctor_", ""));
+    chatUserReply(messagesEl, `Call ${getPrimaryProviderForService(action.replace("call_doctor_", ""))?.name || "doctor"}`);
+  } else if (action.startsWith("online_meeting_")) {
+    const svc = getServiceById(action.replace("online_meeting_", ""));
+    chatUserReply(messagesEl, `Book online ${svc?.patientLabel || "visit"}`);
+  } else if (action === "confirm_online_book") {
+    chatUserReply(messagesEl, "Yes, book online visit");
   } else if (action.startsWith("cancel_") && action !== "cancel_flow") {
     chatUserReply(messagesEl, "Cancel this appointment");
   } else if (action.startsWith("closest_") && action !== "closest_start") {
@@ -119,7 +134,7 @@ function runChatAction(messagesEl, action, slotIndex) {
   }
 
   if (action === "help") {
-    chatBotReply(messagesEl, "I can:\n• Book by service (cardio, general doctor, skin care)\n• Find the closest practitioner with an open slot\n• Show or cancel your upcoming visits\n\nTry typing \"book general doctor\" or tap a button.", {
+    chatBotReply(messagesEl, "I can:\n• Book by service (cardio, general doctor, skin care)\n• Find the closest practitioner with an open slot\n• If no in-person slots: call your doctor or book an online video visit\n• Show or cancel your upcoming visits\n\nTry \"book skin care\" when in-person slots are full.", {
       quickReplies: [
         { id: "book_start", label: "Book appointment" },
         { id: "closest_start", label: "Nearest doctor" },
@@ -172,6 +187,78 @@ function runChatAction(messagesEl, action, slotIndex) {
     return;
   }
 
+  if (action.startsWith("call_doctor_")) {
+    const serviceId = action.replace("call_doctor_", "");
+    const provider = getPrimaryProviderForService(serviceId);
+    if (provider && initiateDoctorCall(provider)) {
+      chatBotReply(messagesEl, `Opening phone dialer for ${provider.name} (${formatPhoneDisplay(provider.phone)}).\n\nAfter your call, you can book an online visit here if needed.`, {
+        quickReplies: getOnlineMeetings(serviceId).length
+          ? [{ id: `online_meeting_${serviceId}`, label: "Book online meeting" }]
+          : [{ id: "book_start", label: "Back to booking" }],
+      });
+    } else {
+      chatBotReply(messagesEl, "Sorry, we couldn't find a phone number for this service.", {
+        quickReplies: [{ id: `online_meeting_${serviceId}`, label: "Book online instead" }],
+      });
+    }
+    return;
+  }
+
+  if (action.startsWith("online_meeting_")) {
+    const serviceId = action.replace("online_meeting_", "");
+    const service = getServiceById(serviceId);
+    const onlineSlots = getOnlineMeetings(serviceId);
+    CHATBOT.lastOnlineSlots = onlineSlots;
+    CHATBOT.pendingServiceId = serviceId;
+    CHATBOT.state = "pick_online_slot";
+
+    if (!onlineSlots.length) {
+      chatBotReply(messagesEl, `No online video visits available for ${service?.patientLabel || serviceId} right now.`, {
+        quickReplies: serviceQuickReplies(),
+      });
+      return;
+    }
+
+    chatBotReply(messagesEl, `Online video visits for ${service.patientLabel}:`, {
+      cards: onlineSlots.map((slot, i) => ({
+        title: slot.display,
+        subtitle: `${slot.provider} · ${slot.type}`,
+        meta: slot.meetingId ? `Meeting ID: ${slot.meetingId}` : "Join from your phone or browser",
+        action: `book_online_${i}`,
+        actionLabel: "Book online visit",
+        highlight: i === 0,
+      })),
+    });
+    return;
+  }
+
+  if (action.startsWith("book_online_")) {
+    const idx = slotIndex ?? Number(action.replace("book_online_", ""));
+    const slot = (CHATBOT.lastOnlineSlots || [])[idx];
+    if (!slot) {
+      chatBotReply(messagesEl, "That online slot is no longer available.", {
+        quickReplies: CHATBOT.pendingServiceId
+          ? [{ id: `online_meeting_${CHATBOT.pendingServiceId}`, label: "See other times" }]
+          : [{ id: "book_start", label: "Search again" }],
+      });
+      return;
+    }
+    CHATBOT.pendingOnlineSlot = slot;
+    CHATBOT.state = "confirm_online_book";
+    chatBotReply(messagesEl, `Confirm online video visit?\n\n${slot.display}\n${slot.provider} · ${slot.type}\n\nJoin link will be sent after booking.`, {
+      quickReplies: [
+        { id: "confirm_online_book", label: "Yes, book online" },
+        { id: `online_meeting_${slot.serviceId}`, label: "Pick another time" },
+      ],
+    });
+    return;
+  }
+
+  if (action === "confirm_online_book" && CHATBOT.pendingOnlineSlot) {
+    completeOnlineBooking(messagesEl, CHATBOT.pendingOnlineSlot);
+    return;
+  }
+
   if (action === "my_appointments") {
     showMyAppointments(messagesEl);
     return;
@@ -206,9 +293,7 @@ function showAvailabilityForService(messagesEl, serviceId) {
   CHATBOT.lastSlots = slots;
 
   if (!slots.length) {
-    chatBotReply(messagesEl, `No open slots for ${service?.patientLabel || serviceId}. Try another service?`, {
-      quickReplies: serviceQuickReplies(),
-    });
+    showNoAvailabilityFallback(messagesEl, serviceId);
     return;
   }
 
@@ -233,9 +318,7 @@ function showClosestMatch(messagesEl, serviceId) {
   });
 
   if (!practitioner || !slot) {
-    chatBotReply(messagesEl, `No ${service?.patientLabel || ""} slots near you right now.`, {
-      quickReplies: serviceQuickReplies(),
-    });
+    showNoAvailabilityFallback(messagesEl, serviceId);
     return;
   }
 
@@ -257,6 +340,35 @@ function showClosestMatch(messagesEl, serviceId) {
     CHATBOT.lastSlots = [slot, ...alternatives.slice(0, 2)];
     chatBotReply(messagesEl, `Say "show more slots" for ${alternatives.length} other nearby option${alternatives.length === 1 ? "" : "s"}.`);
   }
+}
+
+function showNoAvailabilityFallback(messagesEl, serviceId) {
+  CHATBOT.pendingServiceId = serviceId;
+  CHATBOT.state = "no_availability";
+  const service = getServiceById(serviceId);
+  const provider = getPrimaryProviderForService(serviceId);
+  const onlineSlots = getOnlineMeetings(serviceId);
+
+  let message = `No in-person appointments for ${service?.patientLabel || "this service"} right now.`;
+  if (provider?.phone) {
+    message += `\n\nYou can call ${provider.name} at ${formatPhoneDisplay(provider.phone)} or book an online video visit.`;
+  } else if (onlineSlots.length) {
+    message += "\n\nYou can book an online video visit instead.";
+  } else {
+    message += "\n\nTry another service or check back later.";
+  }
+
+  const quickReplies = [];
+  if (provider?.phone) {
+    const lastName = provider.name.split(" ").pop() || "doctor";
+    quickReplies.push({ id: `call_doctor_${serviceId}`, label: `Call Dr. ${lastName}` });
+  }
+  if (onlineSlots.length) {
+    quickReplies.push({ id: `online_meeting_${serviceId}`, label: "Book online meeting" });
+  }
+  quickReplies.push({ id: "book_start", label: "Try another service" });
+
+  chatBotReply(messagesEl, message, { quickReplies });
 }
 
 function showMyReminders(messagesEl) {
@@ -329,6 +441,49 @@ function cancelChatAppointment(messagesEl, id) {
   refreshMobilePanels();
 }
 
+function completeOnlineBooking(messagesEl, slot) {
+  const session = getSession();
+  const appt = {
+    id: Date.now(),
+    patient: session?.name || "Maria Santos",
+    patientId: "P-1",
+    provider: slot.provider,
+    datetime: `${slot.date}T${slot.time}:00`,
+    displayDate: slot.display,
+    status: "scheduled",
+    type: slot.type,
+    location: "Online video visit",
+    bookingChannel: "telehealth",
+    meetingUrl: slot.meetingUrl,
+    meetingId: slot.meetingId,
+  };
+
+  saveAppointments([...getAppointments(), appt]);
+  sessionStorage.setItem("lastBooking", JSON.stringify({
+    date: slot.date,
+    time: slot.time,
+    provider: slot.provider,
+    serviceId: slot.serviceId,
+    type: slot.type,
+    telehealth: true,
+    meetingUrl: slot.meetingUrl,
+  }));
+
+  queueConfirmation(appt);
+
+  CHATBOT.pendingOnlineSlot = null;
+  CHATBOT.state = "idle";
+
+  chatBotReply(messagesEl, `You're booked for an online visit!\n\n${slot.display}\n${slot.provider} · ${slot.type}\n${slot.meetingUrl ? `\nJoin: ${slot.meetingUrl}` : ""}\n\nConfirmation email sent with your video link. Reminder scheduled 24 h before.`, {
+    quickReplies: [
+      { id: "my_appointments", label: "View appointments" },
+      { id: "book_start", label: "Book another" },
+    ],
+  });
+
+  refreshMobilePanels();
+}
+
 function completeChatBooking(messagesEl, slot) {
   const session = getSession();
   const appt = {
@@ -388,6 +543,9 @@ function parseChatIntent(text) {
     return { action: /nearest|closest|near/.test(t) ? `closest_dermatology` : "service_dermatology" };
   }
   if (/^(yes|confirm|book it)\b/.test(t) && CHATBOT.state === "confirm_book") return { action: "confirm_book" };
+  if (/^(yes|confirm|book online|book it)\b/.test(t) && CHATBOT.state === "confirm_online_book") return { action: "confirm_online_book" };
+  if (/\b(call|phone)\b/.test(t) && CHATBOT.pendingServiceId) return { action: `call_doctor_${CHATBOT.pendingServiceId}` };
+  if (/\b(online|video|telehealth|virtual)\b/.test(t) && CHATBOT.pendingServiceId) return { action: `online_meeting_${CHATBOT.pendingServiceId}` };
   return null;
 }
 
@@ -425,6 +583,8 @@ function handleChatInput(text) {
             actionLabel: "Book",
           })),
         });
+      } else {
+        showNoAvailabilityFallback(messagesEl, CHATBOT.pendingServiceId);
       }
       return;
     }
