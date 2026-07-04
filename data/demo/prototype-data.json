@@ -1,0 +1,90 @@
+{
+  "patientProfile": {
+    "id": "P-1",
+    "name": "Maria Santos",
+    "address": "45 Atlantic Ave, Brooklyn, NY 11201",
+    "zip": "11201",
+    "lat": 40.6892,
+    "lng": -73.9857
+  },
+  "locations": [
+    {
+      "id": "main",
+      "name": "Our Clinic — Brooklyn",
+      "shortName": "Brooklyn",
+      "address": "100 Health Way, Brooklyn, NY 11201",
+      "lat": 40.6912,
+      "lng": -73.9823,
+      "timezone": "America/New_York",
+      "hours": "Mon–Fri 8:00 AM – 6:00 PM"
+    },
+    {
+      "id": "midtown",
+      "name": "Our Clinic — Midtown",
+      "shortName": "Midtown",
+      "address": "200 Park Ave, New York, NY 10017",
+      "lat": 40.7549,
+      "lng": -73.9757,
+      "timezone": "America/New_York",
+      "hours": "Mon–Fri 7:30 AM – 7:00 PM"
+    },
+    {
+      "id": "queens",
+      "name": "Our Clinic — Queens",
+      "shortName": "Queens",
+      "address": "50 Main St, Flushing, NY 11354",
+      "lat": 40.758,
+      "lng": -73.8305,
+      "timezone": "America/New_York",
+      "hours": "Mon–Sat 8:00 AM – 5:00 PM"
+    }
+  ],
+  "services": [
+    {
+      "id": "cardiology",
+      "label": "Cardiology",
+      "patientLabel": "Heart / Cardio",
+      "description": "Heart and cardiovascular care",
+      "specialties": ["Cardiology"],
+      "ivrOption": "1"
+    },
+    {
+      "id": "general",
+      "label": "General Practice",
+      "patientLabel": "General Doctor",
+      "description": "Primary care and internal medicine",
+      "specialties": ["Internal Medicine"],
+      "ivrOption": "2"
+    },
+    {
+      "id": "dermatology",
+      "label": "Dermatology",
+      "patientLabel": "Skin Care",
+      "description": "Skin, hair, and nail conditions",
+      "specialties": ["Dermatology"],
+      "ivrOption": "3"
+    }
+  ],
+  "providers": [
+    {"id": 1, "name": "Dr. James Chen", "specialty": "Cardiology", "locationId": "main", "location": "Our Clinic — Brooklyn", "lat": 40.6912, "lng": -73.9823},
+    {"id": 2, "name": "Dr. Sarah Lee", "specialty": "Cardiology", "locationId": "midtown", "location": "Our Clinic — Midtown", "lat": 40.7549, "lng": -73.9757},
+    {"id": 3, "name": "Dr. Amy Patel", "specialty": "Internal Medicine", "locationId": "queens", "location": "Our Clinic — Queens", "lat": 40.758, "lng": -73.8305},
+    {"id": 4, "name": "Dr. Robert Kim", "specialty": "Internal Medicine", "locationId": "main", "location": "Our Clinic — Brooklyn", "lat": 40.6912, "lng": -73.9823},
+    {"id": 5, "name": "Dr. Lisa Wong", "specialty": "Dermatology", "locationId": "midtown", "location": "Our Clinic — Midtown", "lat": 40.7549, "lng": -73.9757},
+    {"id": 6, "name": "Dr. Michael Rivera", "specialty": "Internal Medicine", "locationId": "queens", "location": "Our Clinic — Queens", "lat": 40.758, "lng": -73.8305}
+  ],
+  "availabilityByService": [
+    {"serviceId": "cardiology", "provider": "Dr. James Chen", "providerId": 1, "locationId": "main", "date": "2025-09-08", "dateLabel": "Mon Sep 8", "time": "09:00", "display": "Mon Sep 8 · 9:00 AM", "type": "Cardiology Follow-up", "location": "Our Clinic — Brooklyn"},
+    {"serviceId": "cardiology", "provider": "Dr. James Chen", "providerId": 1, "locationId": "main", "date": "2025-09-08", "dateLabel": "Mon Sep 8", "time": "10:30", "display": "Mon Sep 8 · 10:30 AM", "type": "Cardiology Follow-up", "location": "Our Clinic — Brooklyn"},
+    {"serviceId": "cardiology", "provider": "Dr. Sarah Lee", "providerId": 2, "locationId": "midtown", "date": "2025-09-10", "dateLabel": "Wed Sep 10", "time": "14:30", "display": "Wed Sep 10 · 2:30 PM", "type": "Cardiology Follow-up", "location": "Our Clinic — Midtown"},
+    {"serviceId": "cardiology", "provider": "Dr. Sarah Lee", "providerId": 2, "locationId": "midtown", "date": "2025-09-11", "dateLabel": "Thu Sep 11", "time": "11:00", "display": "Thu Sep 11 · 11:00 AM", "type": "New Patient Consult", "location": "Our Clinic — Midtown"},
+    {"serviceId": "general", "provider": "Dr. Amy Patel", "providerId": 3, "locationId": "queens", "date": "2025-09-08", "dateLabel": "Mon Sep 8", "time": "11:00", "display": "Mon Sep 8 · 11:00 AM", "type": "General Visit", "location": "Our Clinic — Queens"},
+    {"serviceId": "general", "provider": "Dr. Robert Kim", "providerId": 4, "locationId": "main", "date": "2025-09-09", "dateLabel": "Tue Sep 9", "time": "15:30", "display": "Tue Sep 9 · 3:30 PM", "type": "New Patient Consult", "location": "Our Clinic — Brooklyn"},
+    {"serviceId": "general", "provider": "Dr. Robert Kim", "providerId": 4, "locationId": "main", "date": "2025-09-09", "dateLabel": "Tue Sep 9", "time": "16:00", "display": "Tue Sep 9 · 4:00 PM", "type": "General Visit", "location": "Our Clinic — Brooklyn"},
+    {"serviceId": "general", "provider": "Dr. Michael Rivera", "providerId": 6, "locationId": "queens", "date": "2025-09-12", "dateLabel": "Fri Sep 12", "time": "09:30", "display": "Fri Sep 12 · 9:30 AM", "type": "General Visit", "location": "Our Clinic — Queens"},
+    {"serviceId": "general", "provider": "Dr. Amy Patel", "providerId": 3, "locationId": "queens", "date": "2025-09-08", "dateLabel": "Mon Sep 8", "time": "14:00", "display": "Mon Sep 8 · 2:00 PM", "type": "General Visit", "location": "Our Clinic — Queens"},
+    {"serviceId": "dermatology", "provider": "Dr. Lisa Wong", "providerId": 5, "locationId": "midtown", "date": "2025-09-11", "dateLabel": "Thu Sep 11", "time": "10:00", "display": "Thu Sep 11 · 10:00 AM", "type": "Skin Consultation", "location": "Our Clinic — Midtown"},
+    {"serviceId": "dermatology", "provider": "Dr. Lisa Wong", "providerId": 5, "locationId": "midtown", "date": "2025-09-12", "dateLabel": "Fri Sep 12", "time": "15:00", "display": "Fri Sep 12 · 3:00 PM", "type": "Skin Consultation", "location": "Our Clinic — Midtown"},
+    {"serviceId": "dermatology", "provider": "Dr. Lisa Wong", "providerId": 5, "locationId": "midtown", "date": "2025-09-15", "dateLabel": "Mon Sep 15", "time": "09:15", "display": "Mon Sep 15 · 9:15 AM", "type": "Follow-up Visit", "location": "Our Clinic — Midtown"}
+  ]
+}

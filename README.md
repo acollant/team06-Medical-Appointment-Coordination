@@ -16,23 +16,25 @@ team06-Medical-Appointment-Coordination/
 └── backend/                                                # Django API (Phase 1)
 ```
 
-## Quick start — client demo
+## Quick start — run the prototype
 
 ```bash
 ./run-demo.sh
-# or: cd frontend/mockup && python3 -m http.server 8080
 ```
 
-Open **http://localhost:8080** → click a persona → see **[DEMO.md](DEMO.md)** for the full client script.
+Or: `python3 prototype/server.py` · `npm start`
+
+Opens **http://localhost:8080** in your browser automatically.
 
 | URL | What |
 |-----|------|
-| http://localhost:8080 | Sign in + persona buttons |
-| http://localhost:8080/demo.html | Step-by-step demo guide |
+| http://localhost:8080 | Sign in — click a persona (no password) |
+| http://localhost:8080/demo.html | Step-by-step client demo |
+| http://localhost:8080/api/v1/health | Mock API health check |
 
-**Maria (Patient):** search by service, closest practitioner, book a slot.  
-**Elena (Desk):** today's schedule + phone call log.  
-**David (Admin):** 3 locations, utilization reports.
+See **[DEMO.md](DEMO.md)** for the full walkthrough · **[prototype/README.md](prototype/README.md)** for API details.
+
+**Requirements:** Python 3.9+ only (no pip install).
 
 ## Kaggle dataset setup
 

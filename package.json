@@ -1,0 +1,10 @@
+{
+  "name": "medappt-coord-prototype",
+  "private": true,
+  "description": "Medical Appointment Coordination — runnable HTML prototype",
+  "scripts": {
+    "start": "python3 prototype/server.py",
+    "prototype": "python3 prototype/server.py",
+    "demo": "python3 prototype/server.py"
+  }
+}

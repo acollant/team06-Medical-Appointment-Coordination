@@ -2,30 +2,30 @@
 
 Interactive HTML prototype for **Our Clinic** with sample appointments, phone call transcripts, and multi-site availability search.
 
-## Run the demo (30 seconds)
+## Run the prototype (30 seconds)
 
-**Option A — script (from repo root):**
+**One command** (opens your browser automatically):
 
 ```bash
-chmod +x run-demo.sh   # first time only
 ./run-demo.sh
 ```
 
-**Option B — manual:**
+Alternatives:
 
 ```bash
-cd frontend/mockup
-python3 -m http.server 8080
+python3 prototype/server.py
+npm start
 ```
 
-Then open:
+Then use:
 
 | URL | Purpose |
 |-----|---------|
 | http://localhost:8080 | Sign in — click a persona button |
 | http://localhost:8080/demo.html | Full client demo script (~10 min) |
+| http://localhost:8080/api/v1/health | Mock REST API |
 
-No Node.js, database, or API keys required.
+**Requirements:** Python 3.9+ only. No Node, database, or pip install needed.
 
 ## Quick client walkthrough
 
