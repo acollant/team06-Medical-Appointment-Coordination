@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Book appointment — MedAppt Coord</title>
+  <link rel="stylesheet" href="../css/tokens.css">
+  <link rel="stylesheet" href="../css/layout.css">
+  <link rel="stylesheet" href="../css/components.css">
+</head>
+<body class="app-shell">
+  <header class="app-header">
+    <a href="dashboard.html" class="brand">MedAppt Coord</a>
+    <nav>
+      <a href="dashboard.html" data-nav>My Care</a>
+      <a href="appointments.html" data-nav>Appointments</a>
+    </nav>
+    <span class="user-menu"><span data-user-name></span> · <a href="#" data-logout>Sign out</a></span>
+  </header>
+  <main class="app-main">
+    <a href="search.html" class="back-link">← Back</a>
+    <h1 class="page-title" id="title">Book appointment</h1>
+    <p class="page-subtitle" id="subtitle"></p>
+    <div id="slot-days"></div>
+    <p id="prep-note" style="font-size: 0.9rem; color: #64748b;"></p>
+    <button type="button" class="btn btn-primary" id="confirm-btn" disabled style="margin-top: 16px;">Confirm booking</button>
+  </main>
+  <script src="../js/kaggle-fixtures.js"></script>
+  <script src="../js/fixtures.js"></script>
+  <script src="../js/app.js"></script>
+  <script src="../js/search.js"></script>
+  <script>
+    const session = requireAuth(["Patient"]);
+    if (session) {
+      initShell(session, [], "book.html");
+      const params = new URLSearchParams(location.search);
+      const provider = params.get("provider") || "Dr. James Chen";
+      const preDate = params.get("date");
+      const preTime = params.get("time");
+      const serviceId = params.get("service");
+      const apptType = params.get("type") || "Follow-up Visit";
+
+      document.getElementById("title").textContent = `Book with ${provider}`;
+      const service = serviceId ? getServiceById(serviceId) : null;
+      document.getElementById("subtitle").textContent = service
+        ? `Service: ${service.patientLabel} · ${apptType}`
+        : `Appointment type: ${apptType}`;
+
+      let selected = preDate && preTime
+        ? { date: preDate, time: preTime, provider, serviceId, type: apptType }
+        : null;
+
+      const slots = FIXTURES.slots[provider] || FIXTURES.slots["Dr. James Chen"];
+      const dateLabels = { "2025-09-08": "Mon Sep 8", "2025-09-09": "Tue Sep 9", "2025-09-10": "Wed Sep 10" };
+      const container = document.getElementById("slot-days");
+      container.innerHTML = Object.entries(slots).map(([date, times]) => {
+        const label = dateLabels[date] || date;
+        return `<h3 style="font-size:1rem;margin:16px 0 8px;">${label}</h3>
+          <div class="slot-grid">${times.map(t => {
+            const isSelected = preDate === date && preTime === t;
+            return `<button type="button" class="slot-chip${isSelected ? " selected" : ""}" data-date="${date}" data-time="${t}">${t}</button>`;
+          }).join("")}</div>`;
+      }).join("");
+
+      if (selected) document.getElementById("confirm-btn").disabled = false;
+
+      container.addEventListener("click", (e) => {
+        const chip = e.target.closest(".slot-chip");
+        if (!chip) return;
+        container.querySelectorAll(".slot-chip").forEach(c => c.classList.remove("selected"));
+        chip.classList.add("selected");
+        selected = { date: chip.dataset.date, time: chip.dataset.time, provider, serviceId, type: apptType };
+        document.getElementById("confirm-btn").disabled = false;
+      });
+
+      document.getElementById("confirm-btn").addEventListener("click", () => {
+        if (!selected) return;
+        sessionStorage.setItem("lastBooking", JSON.stringify(selected));
+        window.location.href = "confirmation.html";
+      });
+    }
+  </script>
+</body>
+</html>

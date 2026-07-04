@@ -1,0 +1,25 @@
+{
+  "jobName": "our-clinic-2024-call-005",
+  "accountId": "111122223333",
+  "status": "COMPLETED",
+  "results": {
+    "transcripts": [
+      {
+        "transcript": "Welcome to Our Clinic. [3] For dermatology and skin care press three. [3] You selected skin care. No dermatology slots are available this month. Would you like to join the waitlist or try general medicine? I'll call back later. Thank you."
+      }
+    ],
+    "speaker_labels": {
+      "speakers": 2,
+      "segments": [
+        { "start_time": "0.0", "end_time": "6.0", "speaker_label": "spk_0" },
+        { "start_time": "6.5", "end_time": "14.0", "speaker_label": "spk_0" },
+        { "start_time": "14.5", "end_time": "17.0", "speaker_label": "spk_1" },
+        { "start_time": "17.2", "end_time": "19.0", "speaker_label": "spk_0" }
+      ]
+    },
+    "items": [
+      { "start_time": "2.5", "end_time": "3.3", "alternatives": [{ "confidence": "0.92", "content": "dermatology" }], "type": "pronunciation" },
+      { "start_time": "3.5", "end_time": "4.0", "alternatives": [{ "confidence": "0.93", "content": "skin" }], "type": "pronunciation" }
+    ]
+  }
+}

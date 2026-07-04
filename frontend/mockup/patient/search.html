@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Find availability — MedAppt Coord</title>
+  <link rel="stylesheet" href="../css/tokens.css">
+  <link rel="stylesheet" href="../css/layout.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <style>
+    .search-tabs { display: flex; gap: 8px; margin-bottom: 24px; border-bottom: 1px solid var(--color-border); padding-bottom: 0; }
+    .search-tabs button {
+      padding: 10px 16px; border: none; background: none; cursor: pointer;
+      font-family: inherit; font-size: 0.9rem; color: var(--color-text-muted);
+      border-bottom: 2px solid transparent; margin-bottom: -1px;
+    }
+    .search-tabs button.active { color: var(--color-primary); border-bottom-color: var(--color-primary); font-weight: 600; }
+    .service-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; margin-bottom: 24px; }
+    .service-card {
+      text-align: left; padding: 16px; border: 2px solid var(--color-border); border-radius: var(--radius);
+      background: var(--color-card); cursor: pointer; font-family: inherit; transition: border-color 0.15s;
+    }
+    .service-card:hover { border-color: var(--color-primary); }
+    .service-card.selected { border-color: var(--color-primary); background: #eff6ff; }
+    .service-card-title { display: block; font-weight: 700; font-size: 1rem; margin-bottom: 4px; }
+    .service-card-sub { display: block; font-size: 0.8rem; color: var(--color-primary); margin-bottom: 6px; }
+    .service-card-desc { display: block; font-size: 0.8rem; color: var(--color-text-muted); line-height: 1.4; }
+    .availability-day { margin-bottom: 24px; }
+    .availability-day-title { font-size: 1rem; margin: 0 0 12px; color: var(--color-text-muted); }
+    .availability-list { display: flex; flex-direction: column; gap: 8px; }
+    .availability-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 0; }
+    .availability-row-main { display: flex; align-items: center; gap: 16px; }
+    .availability-time { font-weight: 700; font-size: 1.1rem; min-width: 52px; }
+    .availability-row p { margin: 2px 0 0; font-size: 0.85rem; color: var(--color-text-muted); }
+    .results-header { margin-bottom: 16px; color: var(--color-text-muted); font-size: 0.9rem; }
+    .panel-hidden { display: none; }
+  </style>
+</head>
+<body class="app-shell">
+  <header class="app-header">
+    <a href="dashboard.html" class="brand">MedAppt Coord</a>
+    <nav>
+      <a href="dashboard.html" data-nav>My Care</a>
+      <a href="appointments.html" data-nav>Appointments</a>
+    </nav>
+    <span class="user-menu"><span data-user-name></span> · <a href="#" data-logout>Sign out</a></span>
+  </header>
+  <main class="app-main">
+    <a href="dashboard.html" class="back-link">← Back</a>
+    <h1 class="page-title">Find appointment availability</h1>
+    <p class="page-subtitle">Services and slots aligned with Our Clinic phone/IVR call data (Kaggle 2024)</p>
+
+    <div class="search-tabs">
+      <button type="button" id="tab-by-service" class="active">By service</button>
+      <button type="button" id="tab-by-provider">By provider</button>
+    </div>
+
+    <!-- US-4.6: Search by clinical service -->
+    <div id="panel-by-service">
+      <p class="page-subtitle" style="margin-top:0;">What type of care do you need?</p>
+      <div class="service-grid" id="service-grid"></div>
+      <div class="filter-bar">
+        <div class="form-group">
+          <label>Location</label>
+          <select id="service-location"><option>Our Clinic</option></select>
+        </div>
+        <button type="button" class="btn btn-primary" id="service-search-btn">Search availability</button>
+      </div>
+      <div id="service-results"></div>
+    </div>
+
+    <!-- US-4.1: Search by provider specialty -->
+    <div id="panel-by-provider" class="panel-hidden">
+      <div class="filter-bar">
+        <div class="form-group">
+          <label>Specialty</label>
+          <select id="specialty">
+            <option value="Cardiology">Cardiology</option>
+            <option value="Internal Medicine">Internal Medicine</option>
+            <option value="Dermatology">Dermatology</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Location</label>
+          <select id="location"><option>Our Clinic</option></select>
+        </div>
+        <button type="button" class="btn btn-primary" id="search-btn">Search providers</button>
+      </div>
+      <div id="provider-results"></div>
+    </div>
+  </main>
+  <script src="../js/kaggle-fixtures.js"></script>
+  <script src="../js/fixtures.js"></script>
+  <script src="../js/app.js"></script>
+  <script src="../js/search.js"></script>
+  <script>
+    const session = requireAuth(["Patient"]);
+    if (session) {
+      initShell(session, [], "search.html");
+
+      let selectedService = "cardiology";
+      const params = new URLSearchParams(location.search);
+      if (params.get("service")) selectedService = params.get("service");
+
+      const panelService = document.getElementById("panel-by-service");
+      const panelProvider = document.getElementById("panel-by-provider");
+      const tabService = document.getElementById("tab-by-service");
+      const tabProvider = document.getElementById("tab-by-provider");
+
+      function showTab(tab) {
+        const isService = tab === "service";
+        panelService.classList.toggle("panel-hidden", !isService);
+        panelProvider.classList.toggle("panel-hidden", isService);
+        tabService.classList.toggle("active", isService);
+        tabProvider.classList.toggle("active", !isService);
+      }
+
+      tabService.addEventListener("click", () => showTab("service"));
+      tabProvider.addEventListener("click", () => showTab("provider"));
+
+      function onServiceSelect(id) {
+        selectedService = id;
+        renderServiceCards(document.getElementById("service-grid"), selectedService, onServiceSelect);
+        runServiceSearch();
+      }
+
+      renderServiceCards(document.getElementById("service-grid"), selectedService, onServiceSelect);
+
+      function runServiceSearch() {
+        renderAvailabilityResults(
+          document.getElementById("service-results"),
+          selectedService,
+          document.getElementById("service-location").value
+        );
+      }
+
+      document.getElementById("service-search-btn").addEventListener("click", runServiceSearch);
+
+      function renderProviders() {
+        const spec = document.getElementById("specialty").value;
+        const list = FIXTURES.providers.filter((p) => p.specialty === spec);
+        const el = document.getElementById("provider-results");
+        if (!list.length) {
+          el.innerHTML = `<div class="empty-state"><p>No providers found for ${spec}.</p><p>Try broadening your filters.</p></div>`;
+          return;
+        }
+        el.innerHTML = `<p class="results-header">Providers (${list.length})</p>` +
+          list.map((p) => `<div class="card">
+            <h3>${p.name} · ${p.specialty}</h3>
+            <p>${p.location} · Next available: ${p.nextAvailable}</p>
+            <div class="card-actions"><a href="book.html?provider=${encodeURIComponent(p.name)}" class="btn btn-primary btn-sm">View slots →</a></div>
+          </div>`).join("");
+      }
+
+      document.getElementById("search-btn").addEventListener("click", renderProviders);
+
+      runServiceSearch();
+      if (params.get("tab") === "provider") showTab("provider");
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,28 @@
+{
+  "jobName": "our-clinic-2024-call-003",
+  "accountId": "111122223333",
+  "status": "COMPLETED",
+  "results": {
+    "transcripts": [
+      {
+        "transcript": "Thank you for calling Our Clinic. I need to cancel my appointment on Wednesday. Can I have your name? Maria Santos. I see your cardiology visit with Dr Chen at ten AM. Yes, please cancel. Done — your slot is released. Would you like to reschedule?"
+      }
+    ],
+    "speaker_labels": {
+      "speakers": 2,
+      "segments": [
+        { "start_time": "0.0", "end_time": "3.0", "speaker_label": "spk_0" },
+        { "start_time": "3.2", "end_time": "6.5", "speaker_label": "spk_1" },
+        { "start_time": "6.8", "end_time": "8.5", "speaker_label": "spk_0" },
+        { "start_time": "8.7", "end_time": "9.5", "speaker_label": "spk_1" },
+        { "start_time": "9.8", "end_time": "15.0", "speaker_label": "spk_0" },
+        { "start_time": "15.2", "end_time": "16.5", "speaker_label": "spk_1" },
+        { "start_time": "16.8", "end_time": "22.0", "speaker_label": "spk_0" }
+      ]
+    },
+    "items": [
+      { "start_time": "4.0", "end_time": "4.5", "alternatives": [{ "confidence": "0.98", "content": "cancel" }], "type": "pronunciation" },
+      { "start_time": "11.0", "end_time": "11.7", "alternatives": [{ "confidence": "0.96", "content": "cardiology" }], "type": "pronunciation" }
+    ]
+  }
+}

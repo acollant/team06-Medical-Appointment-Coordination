@@ -1,0 +1,28 @@
+{
+  "jobName": "our-clinic-2024-call-002",
+  "accountId": "111122223333",
+  "status": "COMPLETED",
+  "results": {
+    "transcripts": [
+      {
+        "transcript": "Our Clinic, how may I help you? I'd like to see a general doctor for a check-up. [1] Internal medicine, new patient consult. Dr Patel has eleven AM Monday or three PM Tuesday. Tuesday three PM please. Booked — general visit with Dr Robert Kim, Tuesday three thirty PM at Our Clinic."
+      }
+    ],
+    "speaker_labels": {
+      "speakers": 2,
+      "segments": [
+        { "start_time": "0.0", "end_time": "3.5", "speaker_label": "spk_0" },
+        { "start_time": "3.8", "end_time": "7.2", "speaker_label": "spk_1" },
+        { "start_time": "7.5", "end_time": "16.0", "speaker_label": "spk_0" },
+        { "start_time": "16.2", "end_time": "18.0", "speaker_label": "spk_1" },
+        { "start_time": "18.2", "end_time": "24.5", "speaker_label": "spk_0" }
+      ]
+    },
+    "items": [
+      { "start_time": "4.5", "end_time": "5.1", "alternatives": [{ "confidence": "0.94", "content": "general" }], "type": "pronunciation" },
+      { "start_time": "5.2", "end_time": "5.6", "alternatives": [{ "confidence": "0.93", "content": "doctor" }], "type": "pronunciation" },
+      { "start_time": "8.0", "end_time": "8.8", "alternatives": [{ "confidence": "0.91", "content": "Internal" }], "type": "pronunciation" },
+      { "start_time": "8.9", "end_time": "9.5", "alternatives": [{ "confidence": "0.92", "content": "medicine" }], "type": "pronunciation" }
+    ]
+  }
+}

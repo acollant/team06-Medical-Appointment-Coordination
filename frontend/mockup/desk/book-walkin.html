@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Walk-in booking — MedAppt Coord</title>
+  <link rel="stylesheet" href="../css/tokens.css">
+  <link rel="stylesheet" href="../css/layout.css">
+  <link rel="stylesheet" href="../css/components.css">
+</head>
+<body class="app-shell">
+  <header class="app-header">
+    <a href="schedule.html" class="brand">MedAppt Coord</a>
+    <nav>
+      <a href="schedule.html" data-nav>Today</a>
+      <a href="book-walkin.html" data-nav class="active">Walk-in</a>
+      <a href="checkin.html" data-nav>Check-in</a>
+      <a href="calls.html" data-nav>Call log</a>
+    </nav>
+    <span class="user-menu"><span data-user-name></span> · <a href="#" data-logout>Sign out</a></span>
+  </header>
+  <main class="app-main">
+    <a href="schedule.html" class="back-link">← Back to schedule</a>
+    <h1 class="page-title">Walk-in / phone booking</h1>
+    <div class="card">
+      <h3>Patient</h3>
+      <div class="form-group">
+        <label><input type="radio" name="ptype" value="existing" checked> Existing patient</label>
+        <select><option>Maria Santos</option><option>John Doe</option></select>
+      </div>
+      <div class="form-group">
+        <label><input type="radio" name="ptype" value="new"> New walk-in</label>
+        <input type="text" placeholder="Full name" disabled id="new-name">
+        <input type="tel" placeholder="Phone" style="margin-top:8px;" disabled id="new-phone">
+      </div>
+    </div>
+    <div class="card">
+      <h3>Appointment</h3>
+      <div class="form-group">
+        <label>Provider</label>
+        <select><option>Dr. James Chen</option></select>
+      </div>
+      <div class="form-group">
+        <label>Time today</label>
+        <select><option>2:00 PM</option><option>2:30 PM</option><option>3:00 PM</option></select>
+      </div>
+      <button type="button" class="btn btn-primary" id="book-walkin">Book appointment</button>
+    </div>
+  </main>
+  <script src="../js/kaggle-fixtures.js"></script>
+  <script src="../js/fixtures.js"></script>
+  <script src="../js/app.js"></script>
+  <script>
+    const session = requireAuth(["FrontDesk"]);
+    if (session) {
+      initShell(session, [], "book-walkin.html");
+      document.querySelectorAll("[name=ptype]").forEach(r => {
+        r.addEventListener("change", () => {
+          const isNew = document.querySelector("[value=new]").checked;
+          document.getElementById("new-name").disabled = !isNew;
+          document.getElementById("new-phone").disabled = !isNew;
+        });
+      });
+      document.getElementById("book-walkin").addEventListener("click", () => {
+        showToast("Booked on behalf of patient — confirmation email sent", "success");
+        setTimeout(() => location.href = "schedule.html", 800);
+      });
+    }
+  </script>
+</body>
+</html>

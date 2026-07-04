@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Users & roles — MedAppt Coord</title>
+  <link rel="stylesheet" href="../css/tokens.css">
+  <link rel="stylesheet" href="../css/layout.css">
+  <link rel="stylesheet" href="../css/components.css">
+</head>
+<body class="app-shell">
+  <header class="app-header">
+    <a href="clinic.html" class="brand">MedAppt Coord</a>
+    <nav>
+      <a href="clinic.html" data-nav>Clinic</a>
+      <a href="users.html" data-nav class="active">Users</a>
+      <a href="reports.html" data-nav>Reports</a>
+    </nav>
+    <span class="user-menu"><span data-user-name></span> · <a href="#" data-logout>Sign out</a></span>
+  </header>
+  <main class="app-main">
+    <h1 class="page-title">Users & roles</h1>
+    <table class="data-table">
+      <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead>
+      <tbody id="users-body"></tbody>
+    </table>
+  </main>
+  <script src="../js/fixtures.js"></script>
+  <script src="../js/app.js"></script>
+  <script>
+    const session = requireAuth(["Admin"]);
+    if (session) {
+      initShell(session, [], "users.html");
+      const tbody = document.getElementById("users-body");
+      function render() {
+        tbody.innerHTML = FIXTURES.users.map((u, i) => `<tr style="${u.active ? "" : "opacity:0.5"}">
+          <td>${u.name}</td><td>${u.email}</td>
+          <td><select class="role-select" data-i="${i}" ${!u.active ? "disabled" : ""}>
+            ${["Patient","Provider","FrontDesk","Admin"].map(r =>
+              `<option ${r===u.role?"selected":""}>${r}</option>`).join("")}
+          </select></td>
+          <td>${u.active ? "Active" : "Inactive"}</td>
+          <td>${u.active
+            ? `<button type="button" class="btn btn-danger btn-sm deactivate" data-i="${i}">Deactivate</button>`
+            : "—"}</td>
+        </tr>`).join("");
+        document.querySelectorAll(".role-select").forEach(sel => {
+          sel.addEventListener("change", () => showToast("Role updated — audit log recorded", "success"));
+        });
+        document.querySelectorAll(".deactivate").forEach(btn => {
+          btn.addEventListener("click", () => {
+            FIXTURES.users[btn.dataset.i].active = false;
+            showToast("User deactivated", "success");
+            render();
+          });
+        });
+      }
+      render();
+    }
+  </script>
+</body>
+</html>

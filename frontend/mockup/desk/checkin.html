@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Check-in — MedAppt Coord</title>
+  <link rel="stylesheet" href="../css/tokens.css">
+  <link rel="stylesheet" href="../css/layout.css">
+  <link rel="stylesheet" href="../css/components.css">
+</head>
+<body class="app-shell">
+  <header class="app-header">
+    <a href="schedule.html" class="brand">MedAppt Coord</a>
+    <nav>
+      <a href="schedule.html" data-nav>Today</a>
+      <a href="book-walkin.html" data-nav>Walk-in</a>
+      <a href="checkin.html" data-nav class="active">Check-in</a>
+      <a href="calls.html" data-nav>Call log</a>
+    </nav>
+    <span class="user-menu"><span data-user-name></span> · <a href="#" data-logout>Sign out</a></span>
+  </header>
+  <main class="app-main">
+    <h1 class="page-title">Patient check-in</h1>
+    <div id="checkin-list"></div>
+  </main>
+  <script src="../js/kaggle-fixtures.js"></script>
+  <script src="../js/fixtures.js"></script>
+  <script src="../js/app.js"></script>
+  <script>
+    const session = requireAuth(["FrontDesk"]);
+    const cooldown = {};
+    if (session) {
+      initShell(session, [], "checkin.html");
+      const scheduled = FIXTURES.deskSchedule.filter(r => r.status === "scheduled" && r.id);
+      document.getElementById("checkin-list").innerHTML = scheduled.map(row => `<div class="card" data-id="${row.id}">
+        <h3>${row.patient} · ${row.time}</h3>
+        <p>${row.provider} · ${row.type}</p>
+        <div class="card-actions">
+          ${statusBadge(row.status)}
+          <button type="button" class="btn btn-primary btn-sm checkin-btn">Check in</button>
+          <button type="button" class="btn btn-secondary btn-sm remind-btn">Send reminder</button>
+        </div>
+      </div>`).join("");
+      document.querySelectorAll(".checkin-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const card = btn.closest(".card");
+          card.querySelector(".badge").outerHTML = statusBadge("checked_in");
+          btn.remove();
+          showToast("Patient checked in — provider calendar updated", "success");
+        });
+      });
+      document.querySelectorAll(".remind-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const id = btn.closest(".card").dataset.id;
+          const now = Date.now();
+          if (cooldown[id] && now - cooldown[id] < 3600000) {
+            showToast("Reminder cooldown — try again in 1 hour", "warning");
+            return;
+          }
+          cooldown[id] = now;
+          showToast("Reminder email sent", "success");
+        });
+      });
+    }
+  </script>
+</body>
+</html>

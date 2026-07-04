@@ -1,0 +1,26 @@
+{
+  "jobName": "our-clinic-2024-call-004",
+  "accountId": "111122223333",
+  "status": "COMPLETED",
+  "results": {
+    "transcripts": [
+      {
+        "transcript": "Our Clinic scheduling. [2] Reschedule my general doctor appointment from Monday to Tuesday. Dr Patel has three thirty PM Tuesday open. Perfect. Your general visit is moved to Tuesday three thirty PM."
+      }
+    ],
+    "speaker_labels": {
+      "speakers": 2,
+      "segments": [
+        { "start_time": "0.0", "end_time": "2.5", "speaker_label": "spk_0" },
+        { "start_time": "3.0", "end_time": "8.0", "speaker_label": "spk_1" },
+        { "start_time": "8.2", "end_time": "12.5", "speaker_label": "spk_0" },
+        { "start_time": "12.8", "end_time": "13.5", "speaker_label": "spk_1" },
+        { "start_time": "13.8", "end_time": "18.0", "speaker_label": "spk_0" }
+      ]
+    },
+    "items": [
+      { "start_time": "4.0", "end_time": "4.8", "alternatives": [{ "confidence": "0.95", "content": "Reschedule" }], "type": "pronunciation" },
+      { "start_time": "5.0", "end_time": "5.5", "alternatives": [{ "confidence": "0.94", "content": "general" }], "type": "pronunciation" }
+    ]
+  }
+}

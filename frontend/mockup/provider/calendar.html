@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calendar — MedAppt Coord</title>
+  <link rel="stylesheet" href="../css/tokens.css">
+  <link rel="stylesheet" href="../css/layout.css">
+  <link rel="stylesheet" href="../css/components.css">
+</head>
+<body class="app-shell">
+  <header class="app-header">
+    <a href="calendar.html" class="brand">MedAppt Coord</a>
+    <nav>
+      <a href="calendar.html" data-nav class="active">Calendar</a>
+      <a href="availability.html" data-nav>Availability</a>
+    </nav>
+    <span class="user-menu"><span data-user-name></span> · <a href="#" data-logout>Sign out</a></span>
+  </header>
+  <main class="app-main">
+    <h1 class="page-title">Calendar</h1>
+    <p class="page-subtitle">Wed Sep 10, 2025 · America/New_York</p>
+    <div class="calendar-grid">
+      <div class="calendar-cell header"></div>
+      <div class="calendar-cell header">9:00</div>
+      <div class="calendar-cell header">10:00</div>
+      <div class="calendar-cell header">11:00</div>
+      <div class="calendar-cell header">12:00</div>
+      <div class="calendar-cell header">1:00</div>
+      <div class="calendar-cell header">2:00</div>
+      <div class="calendar-cell time-label">Room A</div>
+      <div class="calendar-cell has-appt" data-appt="Maria S. · scheduled">Maria S.<br><small>scheduled</small></div>
+      <div class="calendar-cell blocked">PTO</div>
+      <div class="calendar-cell blocked">PTO</div>
+      <div class="calendar-cell"></div>
+      <div class="calendar-cell has-appt" data-appt="John D. · checked_in">John D.<br><small>checked in</small></div>
+      <div class="calendar-cell"></div>
+    </div>
+    <p id="appt-detail" style="margin-top:16px;font-size:0.9rem;color:#64748b;">Click an appointment to update status</p>
+    <div id="actions" style="display:none;margin-top:12px;gap:8px;" class="card-actions">
+      <button class="btn btn-primary btn-sm" data-status="completed">Complete</button>
+      <button class="btn btn-secondary btn-sm" data-status="no_show">No-show</button>
+      <button class="btn btn-danger btn-sm" data-status="cancelled">Cancel</button>
+    </div>
+  </main>
+  <script src="../js/fixtures.js"></script>
+  <script src="../js/app.js"></script>
+  <script>
+    const session = requireAuth(["Provider"]);
+    if (session) {
+      initShell(session, [], "calendar.html");
+      let active = null;
+      document.querySelectorAll(".has-appt").forEach(cell => {
+        cell.addEventListener("click", () => {
+          active = cell;
+          document.getElementById("appt-detail").textContent = "Selected: " + cell.dataset.appt;
+          document.getElementById("actions").style.display = "flex";
+        });
+      });
+      document.querySelectorAll("#actions [data-status]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          if (!active) return;
+          const st = btn.dataset.status;
+          active.innerHTML = active.textContent.split("·")[0] + `<br><small>${st.replace("_", " ")}</small>`;
+          showToast(`Marked as ${st.replace("_", " ")}`, "success");
+        });
+      });
+    }
+  </script>
+</body>
+</html>

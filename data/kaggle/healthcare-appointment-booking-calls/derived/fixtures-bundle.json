@@ -1,0 +1,206 @@
+{
+  "dataset": {
+    "name": "Healthcare Appointment Booking Calls Dataset",
+    "kaggleRef": "ammarshafiq/healthcare-appointment-booking-calls-dataset",
+    "yearFolder": "2024",
+    "clinicName": "Our Clinic",
+    "license": "PDDL"
+  },
+  "location": {
+    "id": 1,
+    "name": "Our Clinic",
+    "address": "100 Health Way",
+    "timezone": "America/New_York",
+    "hours": "Mon\u2013Fri 8:00 AM \u2013 6:00 PM"
+  },
+  "services": [
+    {
+      "id": "cardiology",
+      "label": "Cardiology",
+      "patientLabel": "Heart / Cardio",
+      "description": "Heart and cardiovascular care (from call transcripts)",
+      "specialties": [
+        "Cardiology"
+      ],
+      "ivrOption": "1"
+    },
+    {
+      "id": "general",
+      "label": "General Practice",
+      "patientLabel": "General Doctor",
+      "description": "Primary care and internal medicine",
+      "specialties": [
+        "Internal Medicine"
+      ],
+      "ivrOption": "2"
+    },
+    {
+      "id": "dermatology",
+      "label": "Dermatology",
+      "patientLabel": "Skin Care",
+      "description": "Skin, hair, and nail conditions",
+      "specialties": [
+        "Dermatology"
+      ],
+      "ivrOption": "3"
+    }
+  ],
+  "callRecords": [
+    {
+      "callId": "our-clinic-2024-call-001",
+      "sourceFile": "our-clinic-call-001-book-cardio.json",
+      "status": "COMPLETED",
+      "intent": "book",
+      "serviceId": "cardiology",
+      "provider": "Dr. James Chen",
+      "specialty": "Cardiology",
+      "ivrOptions": [
+        "1",
+        "2"
+      ],
+      "transcriptExcerpt": "Thank you for calling Our Clinic. [1] For appointments press one. Hi, I need to schedule a cardiology follow-up. [2] Sure, I can help with heart and cardio visits. We have Monday at nine AM with Dr Chen or Wednesday at two thirty with Dr Lee. Monday at nine works. Great, you're b\u2026",
+      "fullTranscript": "Thank you for calling Our Clinic. [1] For appointments press one. Hi, I need to schedule a cardiology follow-up. [2] Sure, I can help with heart and cardio visits. We have Monday at nine AM with Dr Chen or Wednesday at two thirty with Dr Lee. Monday at nine works. Great, you're booked for cardiology follow-up at Our Clinic. You'll receive a confirmation text.",
+      "segmentCount": 5,
+      "bookingChannel": "phone_ivr"
+    },
+    {
+      "callId": "our-clinic-2024-call-002",
+      "sourceFile": "our-clinic-call-002-book-general.json",
+      "status": "COMPLETED",
+      "intent": "book",
+      "serviceId": "general",
+      "provider": "Dr. Amy Patel",
+      "specialty": "Internal Medicine",
+      "ivrOptions": [
+        "1"
+      ],
+      "transcriptExcerpt": "Our Clinic, how may I help you? I'd like to see a general doctor for a check-up. [1] Internal medicine, new patient consult. Dr Patel has eleven AM Monday or three PM Tuesday. Tuesday three PM please. Booked \u2014 general visit with Dr Robert Kim, Tuesday three thirty PM at Our Clini\u2026",
+      "fullTranscript": "Our Clinic, how may I help you? I'd like to see a general doctor for a check-up. [1] Internal medicine, new patient consult. Dr Patel has eleven AM Monday or three PM Tuesday. Tuesday three PM please. Booked \u2014 general visit with Dr Robert Kim, Tuesday three thirty PM at Our Clinic.",
+      "segmentCount": 5,
+      "bookingChannel": "phone_ivr"
+    },
+    {
+      "callId": "our-clinic-2024-call-003",
+      "sourceFile": "our-clinic-call-003-cancel.json",
+      "status": "COMPLETED",
+      "intent": "book",
+      "serviceId": "cardiology",
+      "provider": "Dr. James Chen",
+      "specialty": "Cardiology",
+      "ivrOptions": [],
+      "transcriptExcerpt": "Thank you for calling Our Clinic. I need to cancel my appointment on Wednesday. Can I have your name? Maria Santos. I see your cardiology visit with Dr Chen at ten AM. Yes, please cancel. Done \u2014 your slot is released. Would you like to reschedule?",
+      "fullTranscript": "Thank you for calling Our Clinic. I need to cancel my appointment on Wednesday. Can I have your name? Maria Santos. I see your cardiology visit with Dr Chen at ten AM. Yes, please cancel. Done \u2014 your slot is released. Would you like to reschedule?",
+      "segmentCount": 7,
+      "bookingChannel": "phone"
+    },
+    {
+      "callId": "our-clinic-2024-call-004",
+      "sourceFile": "our-clinic-call-004-reschedule-general.json",
+      "status": "COMPLETED",
+      "intent": "book",
+      "serviceId": "general",
+      "provider": "Dr. Amy Patel",
+      "specialty": "Internal Medicine",
+      "ivrOptions": [
+        "2"
+      ],
+      "transcriptExcerpt": "Our Clinic scheduling. [2] Reschedule my general doctor appointment from Monday to Tuesday. Dr Patel has three thirty PM Tuesday open. Perfect. Your general visit is moved to Tuesday three thirty PM.",
+      "fullTranscript": "Our Clinic scheduling. [2] Reschedule my general doctor appointment from Monday to Tuesday. Dr Patel has three thirty PM Tuesday open. Perfect. Your general visit is moved to Tuesday three thirty PM.",
+      "segmentCount": 5,
+      "bookingChannel": "phone_ivr"
+    },
+    {
+      "callId": "our-clinic-2024-call-005",
+      "sourceFile": "our-clinic-call-005-ivr-dermatology-inquiry.json",
+      "status": "COMPLETED",
+      "intent": "inquiry",
+      "serviceId": "dermatology",
+      "provider": null,
+      "specialty": null,
+      "ivrOptions": [
+        "3",
+        "3"
+      ],
+      "transcriptExcerpt": "Welcome to Our Clinic. [3] For dermatology and skin care press three. [3] You selected skin care. No dermatology slots are available this month. Would you like to join the waitlist or try general medicine? I'll call back later. Thank you.",
+      "fullTranscript": "Welcome to Our Clinic. [3] For dermatology and skin care press three. [3] You selected skin care. No dermatology slots are available this month. Would you like to join the waitlist or try general medicine? I'll call back later. Thank you.",
+      "segmentCount": 4,
+      "bookingChannel": "phone_ivr"
+    }
+  ],
+  "availabilityByService": [
+    {
+      "serviceId": "cardiology",
+      "provider": "Dr. James Chen",
+      "providerId": 1,
+      "date": "2025-09-08",
+      "dateLabel": "Mon Sep 8",
+      "time": "09:00",
+      "display": "Mon Sep 8 \u00b7 9:00 AM",
+      "type": "Cardiology Follow-up",
+      "location": "Our Clinic",
+      "sourceCallId": "our-clinic-2024-call-001"
+    },
+    {
+      "serviceId": "cardiology",
+      "provider": "Dr. Sarah Lee",
+      "providerId": 2,
+      "date": "2025-09-10",
+      "dateLabel": "Wed Sep 10",
+      "time": "14:30",
+      "display": "Wed Sep 10 \u00b7 2:30 PM",
+      "type": "Cardiology Follow-up",
+      "location": "Our Clinic",
+      "sourceCallId": "our-clinic-2024-call-001"
+    },
+    {
+      "serviceId": "general",
+      "provider": "Dr. Amy Patel",
+      "providerId": 3,
+      "date": "2025-09-08",
+      "dateLabel": "Mon Sep 8",
+      "time": "11:00",
+      "display": "Mon Sep 8 \u00b7 11:00 AM",
+      "type": "General Visit",
+      "location": "Our Clinic",
+      "sourceCallId": "our-clinic-2024-call-002"
+    },
+    {
+      "serviceId": "general",
+      "provider": "Dr. Robert Kim",
+      "providerId": 4,
+      "date": "2025-09-09",
+      "dateLabel": "Tue Sep 9",
+      "time": "15:30",
+      "display": "Tue Sep 9 \u00b7 3:30 PM",
+      "type": "New Patient Consult",
+      "location": "Our Clinic",
+      "sourceCallId": "our-clinic-2024-call-002"
+    }
+  ],
+  "providers": [
+    {
+      "id": 1,
+      "name": "Dr. James Chen",
+      "specialty": "Cardiology",
+      "location": "Our Clinic"
+    },
+    {
+      "id": 2,
+      "name": "Dr. Sarah Lee",
+      "specialty": "Cardiology",
+      "location": "Our Clinic"
+    },
+    {
+      "id": 3,
+      "name": "Dr. Amy Patel",
+      "specialty": "Internal Medicine",
+      "location": "Our Clinic"
+    },
+    {
+      "id": 4,
+      "name": "Dr. Robert Kim",
+      "specialty": "Internal Medicine",
+      "location": "Our Clinic"
+    }
+  ]
+}

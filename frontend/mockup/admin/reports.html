@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reports — MedAppt Coord</title>
+  <link rel="stylesheet" href="../css/tokens.css">
+  <link rel="stylesheet" href="../css/layout.css">
+  <link rel="stylesheet" href="../css/components.css">
+</head>
+<body class="app-shell">
+  <header class="app-header">
+    <a href="clinic.html" class="brand">MedAppt Coord</a>
+    <nav>
+      <a href="clinic.html" data-nav>Clinic</a>
+      <a href="users.html" data-nav>Users</a>
+      <a href="reports.html" data-nav class="active">Reports</a>
+    </nav>
+    <span class="user-menu"><span data-user-name></span> · <a href="#" data-logout>Sign out</a></span>
+  </header>
+  <main class="app-main">
+    <h1 class="page-title">Reports</h1>
+    <div class="alert alert-info">Phase 2 — utilization dashboard and CSV export (US-6.1–6.3)</div>
+    <div class="grid-2" style="grid-template-columns: repeat(3, 1fr);">
+      <div class="card"><h3>Utilization</h3><p style="font-size:2rem;font-weight:700;margin:8px 0;">85%</p><p>Booked slots / total slots</p></div>
+      <div class="card"><h3>No-show rate</h3><p style="font-size:2rem;font-weight:700;margin:8px 0;">12%</p><p>Last 30 days</p></div>
+      <div class="card"><h3>Export</h3><p>Download appointment CSV</p><button type="button" class="btn btn-secondary btn-sm" id="export-btn">Export Sep 2025</button></div>
+    </div>
+  </main>
+  <script src="../js/fixtures.js"></script>
+  <script src="../js/app.js"></script>
+  <script>
+    const session = requireAuth(["Admin"]);
+    if (session) {
+      initShell(session, [], "reports.html");
+      document.getElementById("export-btn").addEventListener("click", () =>
+        showToast("CSV export started — audit log recorded", "success"));
+    }
+  </script>
+</body>
+</html>
