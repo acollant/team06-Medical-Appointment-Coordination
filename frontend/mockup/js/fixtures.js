@@ -75,7 +75,7 @@ const FIXTURES = {
       displayDate: "Wed Sep 10 · 10:00 AM ET",
       status: "scheduled",
       type: "Cardiology Follow-up",
-      location: "Our Clinic",
+      location: "Our Clinic — Brooklyn",
       bookingChannel: "phone",
       sourceCallId: "our-clinic-2024-call-001",
     },
@@ -88,7 +88,7 @@ const FIXTURES = {
       displayDate: "Wed Sep 10 · 2:00 PM ET",
       status: "checked_in",
       type: "New Patient Consult",
-      location: "Our Clinic",
+      location: "Our Clinic — Brooklyn",
       bookingChannel: "walk_in",
     },
     {
@@ -100,7 +100,7 @@ const FIXTURES = {
       displayDate: "Aug 12 · 10:00 AM ET",
       status: "completed",
       type: "Cardiology Follow-up",
-      location: "Our Clinic",
+      location: "Our Clinic — Brooklyn",
       bookingChannel: "web",
     },
   ],
@@ -138,6 +138,9 @@ function applyDemoFixtures() {
   FIXTURES.providers = DEMO_FIXTURES.providers;
   FIXTURES.availabilityByService = DEMO_FIXTURES.availabilityByService;
   FIXTURES.specialties = [...new Set(DEMO_FIXTURES.providers.map((p) => p.specialty))];
+  if (DEMO_FIXTURES.appointments) FIXTURES.appointments = DEMO_FIXTURES.appointments;
+  if (DEMO_FIXTURES.deskSchedule) FIXTURES.deskSchedule = DEMO_FIXTURES.deskSchedule;
+  if (DEMO_FIXTURES.demoStats) FIXTURES.demoStats = DEMO_FIXTURES.demoStats;
 }
 
 applyKaggleFixtures();

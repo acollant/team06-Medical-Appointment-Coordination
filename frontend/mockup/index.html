@@ -10,7 +10,7 @@
 </head>
 <body>
   <div class="auth-page">
-    <a href="index.html" class="brand" style="margin-bottom: 24px; font-size: 1.25rem; font-weight: 700; color: #0f172a; text-decoration: none;">MedAppt Coord</a>
+    <a href="index.html" class="brand" style="margin-bottom: 24px; font-size: 1.25rem; font-weight: 700; color: #0f172a; text-decoration: none;">MedAppt Coord · Our Clinic</a>
     <div class="auth-card">
       <h1>Sign in</h1>
       <form id="login-form">
@@ -26,19 +26,32 @@
       </form>
       <p style="margin-top: 16px; font-size: 0.9rem;">
         <a href="forgot-password.html">Forgot password?</a> ·
-        <a href="register.html">Create account</a>
+        <a href="register.html">Create account</a> ·
+        <a href="demo.html">Demo guide →</a>
       </p>
       <div class="demo-roles">
-        <p>Demo — quick sign-in by persona:</p>
+        <p><strong>Client demo</strong> — click a persona (no password needed):</p>
         <div class="btn-row">
-          <button type="button" class="btn btn-secondary btn-sm" data-login-as="P-1">Maria (Patient)</button>
-          <button type="button" class="btn btn-secondary btn-sm" data-login-as="P-2">Dr. Chen (Provider)</button>
-          <button type="button" class="btn btn-secondary btn-sm" data-login-as="P-3">Elena (Desk)</button>
-          <button type="button" class="btn btn-secondary btn-sm" data-login-as="P-4">David (Admin)</button>
+          <button type="button" class="btn btn-primary btn-sm" data-login-as="P-1">Maria · Patient</button>
+          <button type="button" class="btn btn-secondary btn-sm" data-login-as="P-3">Elena · Front desk</button>
+          <button type="button" class="btn btn-secondary btn-sm" data-login-as="P-2">Dr. Chen · Provider</button>
+          <button type="button" class="btn btn-secondary btn-sm" data-login-as="P-4">David · Admin</button>
         </div>
       </div>
     </div>
+    <div class="demo-run-box">
+      <h2>How to run this demo</h2>
+      <ol>
+        <li>Open a terminal in <code>frontend/mockup</code></li>
+        <li>Run <code>python3 -m http.server 8080</code></li>
+        <li>Open <span class="demo-url">http://localhost:8080</span> in your browser</li>
+        <li>Click a persona button above — or read the full <a href="demo.html">demo script</a></li>
+      </ol>
+      <p style="margin:0;font-size:0.85rem;color:#64748b;">No install required · works offline · data resets on browser refresh unless you book/cancel during the session</p>
+    </div>
   </div>
+  <script src="js/kaggle-fixtures.js"></script>
+  <script src="js/demo-fixtures.js"></script>
   <script src="js/fixtures.js"></script>
   <script src="js/app.js"></script>
   <script src="js/role-router.js"></script>

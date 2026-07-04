@@ -20,19 +20,39 @@
   </header>
   <main class="app-main">
     <h1 class="page-title">Reports</h1>
-    <div class="alert alert-info">Phase 2 — utilization dashboard and CSV export (US-6.1–6.3)</div>
+    <p class="page-subtitle">Sep 2025 · sample metrics for client demo</p>
     <div class="grid-2" style="grid-template-columns: repeat(3, 1fr);">
-      <div class="card"><h3>Utilization</h3><p style="font-size:2rem;font-weight:700;margin:8px 0;">85%</p><p>Booked slots / total slots</p></div>
-      <div class="card"><h3>No-show rate</h3><p style="font-size:2rem;font-weight:700;margin:8px 0;">12%</p><p>Last 30 days</p></div>
-      <div class="card"><h3>Export</h3><p>Download appointment CSV</p><button type="button" class="btn btn-secondary btn-sm" id="export-btn">Export Sep 2025</button></div>
+      <div class="card"><h3>Utilization</h3><p style="font-size:2rem;font-weight:700;margin:8px 0;" id="util-pct">—</p><p>Booked slots / total slots</p></div>
+      <div class="card"><h3>No-show rate</h3><p style="font-size:2rem;font-weight:700;margin:8px 0;" id="noshow-pct">—</p><p>Last 30 days</p></div>
+      <div class="card"><h3>Phone calls</h3><p style="font-size:2rem;font-weight:700;margin:8px 0;" id="call-count">—</p><p>This week (Kaggle sample)</p></div>
+    </div>
+    <div class="card" style="margin-top:16px;">
+      <h3>Bookings by channel</h3>
+      <table class="data-table">
+        <thead><tr><th>Channel</th><th>Count</th><th>Share</th></tr></thead>
+        <tbody id="channel-table"></tbody>
+      </table>
+    </div>
+    <div class="card">
+      <h3>Export</h3>
+      <p>Download appointment CSV for audit / analytics</p>
+      <button type="button" class="btn btn-secondary btn-sm" id="export-btn">Export Sep 2025</button>
     </div>
   </main>
+  <script src="../js/kaggle-fixtures.js"></script>
+  <script src="../js/demo-fixtures.js"></script>
   <script src="../js/fixtures.js"></script>
   <script src="../js/app.js"></script>
   <script>
     const session = requireAuth(["Admin"]);
     if (session) {
       initShell(session, [], "reports.html");
+      const stats = FIXTURES.demoStats || {};
+      document.getElementById("util-pct").textContent = `${stats.utilizationPct || 85}%`;
+      document.getElementById("noshow-pct").textContent = `${stats.noShowPct || 12}%`;
+      document.getElementById("call-count").textContent = stats.phoneCallsThisWeek || 5;
+      document.getElementById("channel-table").innerHTML = (stats.bookingsByChannel || []).map(r =>
+        `<tr><td>${r.channel}</td><td>${r.count}</td><td>${r.pct}%</td></tr>`).join("");
       document.getElementById("export-btn").addEventListener("click", () =>
         showToast("CSV export started — audit log recorded", "success"));
     }

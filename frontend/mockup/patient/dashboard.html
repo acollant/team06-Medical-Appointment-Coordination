@@ -19,8 +19,13 @@
   </header>
   <main class="app-main">
     <h1 class="page-title">My Care</h1>
-    <h2 style="font-size: 1rem; margin-bottom: 12px;">Upcoming appointment</h2>
+    <p class="page-subtitle" id="patient-greeting"></p>
+
+    <div class="stat-grid" id="clinic-stats"></div>
+
+    <h2 style="font-size: 1rem; margin-bottom: 12px;">Upcoming appointments</h2>
     <div id="upcoming"></div>
+
     <p style="margin: 24px 0 8px;"><a href="search.html" class="btn btn-primary">+ Book new appointment</a></p>
     <p style="margin: 0 0 24px; font-size: 0.9rem;">
       Quick search:
@@ -29,6 +34,10 @@
       <a href="search.html?service=dermatology">Skin care</a> ·
       <a href="search.html?tab=closest&service=general">Closest general doctor</a>
     </p>
+
+    <h2 style="font-size: 1rem; margin-bottom: 12px;">Our Clinic locations</h2>
+    <div id="locations" class="grid-2" style="grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; margin-bottom: 24px;"></div>
+
     <h2 style="font-size: 1rem; margin-bottom: 12px;">Recent history</h2>
     <div id="history"></div>
   </main>
@@ -40,23 +49,40 @@
     const session = requireAuth(["Patient"]);
     if (session) {
       initShell(session, [], "dashboard.html");
+
+      const profile = FIXTURES.patientProfile || {};
+      document.getElementById("patient-greeting").textContent =
+        profile.address ? `Signed in as ${session.name} · ${profile.address}` : "";
+
+      renderStatGrid(document.getElementById("clinic-stats"), FIXTURES.demoStats);
+
+      document.getElementById("locations").innerHTML = (FIXTURES.locations || []).map(loc => `
+        <div class="card">
+          <h3>${loc.shortName || loc.name}</h3>
+          <p>${loc.address}</p>
+          <p>${loc.hours}</p>
+        </div>`).join("");
+
       const appts = getAppointments().filter(a => a.patientId === "P-1");
-      const upcoming = appts.find(a => a.status === "scheduled");
+      const upcoming = appts.filter(a => a.status === "scheduled");
       const past = appts.filter(a => a.status === "completed").slice(0, 3);
       const upEl = document.getElementById("upcoming");
-      if (upcoming) {
-        upEl.innerHTML = `<div class="card">
-          <h3>${upcoming.displayDate}</h3>
-          <p>${upcoming.provider} · ${upcoming.type} · ${upcoming.location}</p>
-          <div class="card-actions">${statusBadge(upcoming.status)}
+
+      if (upcoming.length) {
+        upEl.innerHTML = upcoming.map(u => `<div class="card">
+          <h3>${u.displayDate}</h3>
+          <p>${u.provider} · ${u.type}</p>
+          <p>${u.location} · <span class="channel-tag">${(u.bookingChannel || "web").replace("_", " ")}</span></p>
+          <div class="card-actions">${statusBadge(u.status)}
             <a href="appointments.html" class="btn btn-secondary btn-sm">Manage</a>
           </div>
-        </div>`;
+        </div>`).join("");
       } else {
-        upEl.innerHTML = `<div class="empty-state">No upcoming appointments</div>`;
+        upEl.innerHTML = `<div class="empty-state">No upcoming appointments — <a href="search.html">find availability</a></div>`;
       }
+
       document.getElementById("history").innerHTML = past.length
-        ? past.map(a => `<div class="card"><p>${a.displayDate} · ${a.type} · ${statusBadge(a.status)}</p></div>`).join("")
+        ? past.map(a => `<div class="card"><p>${a.displayDate} · ${a.provider} · ${a.type} · ${statusBadge(a.status)}</p></div>`).join("")
         : `<div class="empty-state">No past visits</div>`;
     }
   </script>

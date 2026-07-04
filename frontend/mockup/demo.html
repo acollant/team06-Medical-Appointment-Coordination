@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Client demo guide — MedAppt Coord</title>
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/components.css">
+  <style>
+    .demo-page { max-width: 720px; margin: 0 auto; padding: var(--space-4) var(--space-3); }
+    .demo-page h1 { margin-bottom: 8px; }
+    .demo-page h2 { font-size: 1.1rem; margin: 28px 0 12px; }
+    .demo-page table { width: 100%; border-collapse: collapse; font-size: 0.9rem; margin: 12px 0; }
+    .demo-page th, .demo-page td { padding: 10px 12px; border: 1px solid var(--color-border); text-align: left; }
+    .demo-page th { background: var(--color-surface); }
+    .step-num { display: inline-block; width: 24px; height: 24px; background: var(--color-primary); color: #fff; border-radius: 50%; text-align: center; line-height: 24px; font-size: 0.8rem; font-weight: 700; margin-right: 8px; }
+  </style>
+</head>
+<body>
+  <div class="demo-page">
+    <a href="index.html" class="back-link">← Back to sign in</a>
+    <h1>Client demo guide</h1>
+    <p class="page-subtitle">Medical Appointment Coordination · Our Clinic · Phase 0 prototype</p>
+
+    <div class="alert alert-info">
+      <strong>Run locally:</strong> <code>cd frontend/mockup && python3 -m http.server 8080</code><br>
+      Then open <a href="http://localhost:8080">http://localhost:8080</a>
+    </div>
+
+    <h2>Recommended demo flow (~10 min)</h2>
+
+    <p><span class="step-num">1</span><strong>Patient books by service</strong> — click <em>Maria · Patient</em></p>
+    <ul>
+      <li>Dashboard shows upcoming cardio visit + clinic stats</li>
+      <li><strong>+ Book new appointment</strong> → <strong>By service</strong> tab</li>
+      <li>Select <strong>General Doctor</strong> → toggle <strong>Nearest first</strong> → 5 open slots across Brooklyn & Queens</li>
+      <li>Click <strong>Book</strong> on any slot → confirm booking</li>
+    </ul>
+
+    <p><span class="step-num">2</span><strong>Closest practitioner</strong> — still as Maria</p>
+    <ul>
+      <li>Open <strong>Closest to me</strong> tab → select <strong>Heart / Cardio</strong></li>
+      <li>ZIP <code>11201</code> (Brooklyn) → <strong>Find closest practitioner</strong></li>
+      <li>Highlights <strong>Dr. James Chen</strong> (~0.3 km) with next open slot + alternatives</li>
+    </ul>
+
+    <p><span class="step-num">3</span><strong>Front desk operations</strong> — sign out → click <em>Elena · Front desk</em></p>
+    <ul>
+      <li><strong>Today's schedule</strong> — 11 appointments across providers (check-in, walk-ins, open slots)</li>
+      <li><strong>Call log</strong> — 5 phone/IVR transcripts from Kaggle dataset; filter by book/cancel/reschedule</li>
+      <li>Click <strong>Match availability</strong> on a booking call to jump to patient search</li>
+    </ul>
+
+    <p><span class="step-num">4</span><strong>Provider view</strong> — sign out → <em>Dr. Chen · Provider</em></p>
+    <ul>
+      <li>Calendar shows Maria (scheduled) and John (checked in) — click to mark complete / no-show</li>
+    </ul>
+
+    <p><span class="step-num">5</span><strong>Admin overview</strong> — sign out → <em>David · Admin</em></p>
+    <ul>
+      <li><strong>Clinic</strong> — 3 locations (Brooklyn, Midtown, Queens), appointment types, holidays</li>
+      <li><strong>Reports</strong> — utilization 85%, no-show 12%, channel breakdown</li>
+    </ul>
+
+    <h2>Sample data at a glance</h2>
+    <table>
+      <thead><tr><th>Data</th><th>Count</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td>Clinic locations</td><td>3</td><td>Brooklyn, Midtown, Queens — with geo for distance search</td></tr>
+        <tr><td>Providers</td><td>6</td><td>Cardiology, Internal Medicine, Dermatology</td></tr>
+        <tr><td>Open availability slots</td><td>12</td><td>Searchable by service + sort by time or distance</td></tr>
+        <tr><td>Phone call records</td><td>5</td><td>Kaggle 2024 transcripts (book, cancel, reschedule, inquiry)</td></tr>
+        <tr><td>Today's desk schedule</td><td>11 rows</td><td>Mix of scheduled, checked-in, available, completed</td></tr>
+        <tr><td>Maria's appointments</td><td>4</td><td>2 upcoming, 2 completed — cancel/reschedule on Appointments page</td></tr>
+      </tbody>
+    </table>
+
+    <h2>Demo personas</h2>
+    <table>
+      <thead><tr><th>Button</th><th>Role</th><th>Best screens</th></tr></thead>
+      <tbody>
+        <tr><td>Maria · Patient</td><td>Patient</td><td>Search, closest match, book, appointments</td></tr>
+        <tr><td>Elena · Front desk</td><td>FrontDesk</td><td>Schedule, call log, walk-in, check-in</td></tr>
+        <tr><td>Dr. Chen · Provider</td><td>Provider</td><td>Calendar, availability templates</td></tr>
+        <tr><td>David · Admin</td><td>Admin</td><td>Clinic setup, users, reports</td></tr>
+      </tbody>
+    </table>
+
+    <p style="margin-top:32px;"><a href="index.html" class="btn btn-primary">Start demo →</a></p>
+  </div>
+</body>
+</html>

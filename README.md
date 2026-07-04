@@ -16,20 +16,23 @@ team06-Medical-Appointment-Coordination/
 └── backend/                                                # Django API (Phase 1)
 ```
 
-## Quick start — UI mockup
+## Quick start — client demo
 
 ```bash
-cd frontend/mockup
-python3 -m http.server 8080
+./run-demo.sh
+# or: cd frontend/mockup && python3 -m http.server 8080
 ```
 
-Open http://localhost:8080 → demo login → **Maria (Patient)**:
+Open **http://localhost:8080** → click a persona → see **[DEMO.md](DEMO.md)** for the full client script.
 
-- **By service** — search Heart/Cardio, General Doctor, or Skin Care across 3 clinic sites
-- **Closest to me** — find the nearest practitioner with an open slot (demo ZIP: 11201 Brooklyn)
-- Sort results by earliest time or nearest distance
+| URL | What |
+|-----|------|
+| http://localhost:8080 | Sign in + persona buttons |
+| http://localhost:8080/demo.html | Step-by-step demo guide |
 
-Front-desk: **Elena** → **Call log** to view parsed Kaggle transcripts.
+**Maria (Patient):** search by service, closest practitioner, book a slot.  
+**Elena (Desk):** today's schedule + phone call log.  
+**David (Admin):** 3 locations, utilization reports.
 
 ## Kaggle dataset setup
 

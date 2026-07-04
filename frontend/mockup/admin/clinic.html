@@ -20,41 +20,65 @@
   </header>
   <main class="app-main">
     <h1 class="page-title">Clinic setup</h1>
+    <p class="page-subtitle">Our Clinic · 3 locations · 6 providers · Kaggle call dataset aligned</p>
+
+    <div class="stat-grid" id="admin-stats"></div>
+
     <div class="grid-2">
       <aside class="sidebar-nav">
         <a href="#locations" class="active">Locations</a>
+        <a href="#providers">Providers</a>
         <a href="#types">Appointment types</a>
         <a href="#hours">Hours & holidays</a>
       </aside>
       <div>
-        <div class="card" id="locations">
-          <h3>Main Clinic</h3>
-          <p>100 Health Way, Boston, MA</p>
-          <p>Timezone: America/New_York</p>
-          <p>Hours: Mon–Fri 8:00 AM – 6:00 PM</p>
-          <button type="button" class="btn btn-secondary btn-sm">Edit location</button>
+        <div id="locations"></div>
+        <div class="card" id="providers" style="margin-top:16px;">
+          <h3>Providers (6)</h3>
+          <table class="data-table">
+            <thead><tr><th>Name</th><th>Specialty</th><th>Location</th><th>Next available</th></tr></thead>
+            <tbody id="provider-table"></tbody>
+          </table>
         </div>
         <div class="card" id="types">
           <h3>Appointment types</h3>
-          <ul style="margin:0;padding-left:20px;color:#64748b;">
-            <li>Follow-up Visit · 15 min</li>
-            <li>New Patient Consult · 30 min</li>
-          </ul>
+          <ul style="margin:0;padding-left:20px;color:#64748b;" id="type-list"></ul>
           <button type="button" class="btn btn-secondary btn-sm" style="margin-top:12px;">+ Add type</button>
         </div>
         <div class="card" id="hours">
           <h3>Holidays</h3>
           <p>Dec 25, 2025 — no slots generated</p>
+          <p>Jan 1, 2026 — no slots generated</p>
           <button type="button" class="btn btn-secondary btn-sm">+ Add holiday</button>
         </div>
       </div>
     </div>
   </main>
+  <script src="../js/kaggle-fixtures.js"></script>
+  <script src="../js/demo-fixtures.js"></script>
   <script src="../js/fixtures.js"></script>
   <script src="../js/app.js"></script>
   <script>
     const session = requireAuth(["Admin"]);
-    if (session) initShell(session, [], "clinic.html");
+    if (session) {
+      initShell(session, [], "clinic.html");
+      renderStatGrid(document.getElementById("admin-stats"), FIXTURES.demoStats);
+
+      document.getElementById("locations").innerHTML = (FIXTURES.locations || []).map(loc => `
+        <div class="card">
+          <h3>${loc.name}</h3>
+          <p>${loc.address}</p>
+          <p>Timezone: ${loc.timezone}</p>
+          <p>Hours: ${loc.hours}</p>
+          <button type="button" class="btn btn-secondary btn-sm">Edit location</button>
+        </div>`).join("");
+
+      document.getElementById("provider-table").innerHTML = (FIXTURES.providers || []).map(p => `
+        <tr><td>${p.name}</td><td>${p.specialty}</td><td>${p.location}</td><td>${p.nextAvailable}</td></tr>`).join("");
+
+      document.getElementById("type-list").innerHTML = FIXTURES.appointmentTypes.map(t =>
+        `<li>${t.name} · ${t.duration} min · ${t.prep}</li>`).join("");
+    }
   </script>
 </body>
 </html>

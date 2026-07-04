@@ -21,20 +21,34 @@
   </header>
   <main class="app-main">
     <h1 class="page-title">Today's schedule</h1>
-    <p class="page-subtitle">Wed Sep 10 · All providers · Main Clinic · America/New_York</p>
+    <p class="page-subtitle" id="schedule-date"></p>
+
+    <div class="stat-grid" id="desk-stats"></div>
+
     <div class="filter-bar">
       <div class="form-group">
         <label>Provider</label>
-        <select><option>All providers</option><option>Dr. James Chen</option><option>Dr. Sarah Lee</option></select>
+        <select id="filter-provider"><option value="">All providers</option></select>
+      </div>
+      <div class="form-group">
+        <label>Status</label>
+        <select id="filter-status">
+          <option value="">All</option>
+          <option value="scheduled">Scheduled</option>
+          <option value="checked_in">Checked in</option>
+          <option value="available">Available</option>
+          <option value="completed">Completed</option>
+        </select>
       </div>
     </div>
     <table class="data-table">
       <thead>
-        <tr><th>Time</th><th>Provider</th><th>Patient</th><th>Status</th><th>Actions</th></tr>
+        <tr><th>Time</th><th>Provider</th><th>Patient</th><th>Type</th><th>Channel</th><th>Status</th><th>Actions</th></tr>
       </thead>
       <tbody id="schedule-body"></tbody>
     </table>
-    <p style="margin-top:16px;"><a href="book-walkin.html" class="btn btn-primary">+ Walk-in booking</a></p>
+    <p style="margin-top:16px;"><a href="book-walkin.html" class="btn btn-primary">+ Walk-in booking</a>
+      <a href="calls.html" class="btn btn-secondary" style="margin-left:8px;">View call log (5)</a></p>
   </main>
   <div class="modal-overlay hidden" id="override-modal" data-modal="override-modal">
     <div class="modal">
@@ -50,19 +64,56 @@
     </div>
   </div>
   <script src="../js/kaggle-fixtures.js"></script>
+  <script src="../js/demo-fixtures.js"></script>
   <script src="../js/fixtures.js"></script>
   <script src="../js/app.js"></script>
   <script>
     const session = requireAuth(["FrontDesk"]);
     if (session) {
       initShell(session, [], "schedule.html");
-      const tbody = document.getElementById("schedule-body");
-      tbody.innerHTML = FIXTURES.deskSchedule.map(row => `<tr>
-        <td>${row.time}</td><td>${row.provider}</td><td>${row.patient}</td>
-        <td>${statusBadge(row.status)}</td>
-        <td>${row.status === "scheduled" ? `<a href="checkin.html?id=${row.id}" class="btn btn-primary btn-sm">Check in</a>` : ""}
-            ${row.status === "override" ? `<button type="button" class="btn btn-secondary btn-sm resolve-btn">Resolve</button>` : ""}
-        </td></tr>`).join("");
+
+      const stats = FIXTURES.demoStats || {};
+      document.getElementById("schedule-date").textContent =
+        `${stats.todayLabel || "Wed Sep 10, 2025"} · All locations · America/New_York`;
+      renderStatGrid(document.getElementById("desk-stats"), stats);
+
+      const providers = [...new Set(FIXTURES.deskSchedule.map(r => r.provider))];
+      const providerSelect = document.getElementById("filter-provider");
+      providers.forEach(p => {
+        const opt = document.createElement("option");
+        opt.value = p;
+        opt.textContent = p;
+        providerSelect.appendChild(opt);
+      });
+
+      function channelLabel(ch) {
+        if (!ch) return "—";
+        return ch.replace("_", " ");
+      }
+
+      function renderSchedule() {
+        const prov = document.getElementById("filter-provider").value;
+        const status = document.getElementById("filter-status").value;
+        let rows = FIXTURES.deskSchedule;
+        if (prov) rows = rows.filter(r => r.provider === prov);
+        if (status) rows = rows.filter(r => r.status === status);
+
+        document.getElementById("schedule-body").innerHTML = rows.map(row => `<tr>
+          <td>${row.time}</td>
+          <td>${row.provider}</td>
+          <td>${row.patient}</td>
+          <td>${row.type}</td>
+          <td><span class="channel-tag">${channelLabel(row.channel)}</span></td>
+          <td>${statusBadge(row.status)}</td>
+          <td>${row.status === "scheduled" && row.id ? `<a href="checkin.html?id=${row.id}" class="btn btn-primary btn-sm">Check in</a>` : ""}
+              ${row.status === "override" ? `<button type="button" class="btn btn-secondary btn-sm resolve-btn">Resolve</button>` : ""}
+          </td></tr>`).join("");
+      }
+
+      document.getElementById("filter-provider").addEventListener("change", renderSchedule);
+      document.getElementById("filter-status").addEventListener("change", renderSchedule);
+      renderSchedule();
+
       document.querySelectorAll(".resolve-btn").forEach(btn => {
         btn.addEventListener("click", () => openModal("override-modal"));
       });

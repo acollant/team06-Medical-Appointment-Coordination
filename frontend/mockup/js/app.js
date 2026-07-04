@@ -86,6 +86,8 @@ function initShell(session, navItems, activeHref) {
   const userEl = document.querySelector("[data-user-name]");
   if (userEl && session) userEl.textContent = session.name;
 
+  initDemoBanner();
+
   document.querySelectorAll("[data-logout]").forEach((btn) => {
     btn.addEventListener("click", (e) => {
       e.preventDefault();
@@ -107,6 +109,25 @@ function openModal(id) {
 
 function closeModal(id) {
   document.getElementById(id)?.classList.add("hidden");
+}
+
+function initDemoBanner() {
+  if (document.querySelector(".demo-banner") || !document.querySelector(".app-shell")) return;
+  const banner = document.createElement("div");
+  banner.className = "demo-banner";
+  banner.innerHTML =
+    `Prototype demo · sample data only · <a href="${resolvePath("demo.html")}">Demo guide</a> · Sign out to switch persona`;
+  const shell = document.querySelector(".app-shell");
+  shell.insertBefore(banner, shell.firstChild);
+}
+
+function renderStatGrid(container, stats) {
+  if (!container || !stats) return;
+  container.innerHTML = `
+    <div class="stat-card"><span class="stat-value">${stats.appointmentsToday}</span><span class="stat-label">Appointments today</span></div>
+    <div class="stat-card"><span class="stat-value">${stats.checkedIn}</span><span class="stat-label">Checked in</span></div>
+    <div class="stat-card"><span class="stat-value">${stats.openSlots}</span><span class="stat-label">Open slots</span></div>
+    <div class="stat-card"><span class="stat-value">${stats.activeProviders}</span><span class="stat-label">Providers</span></div>`;
 }
 
 document.addEventListener("click", (e) => {
