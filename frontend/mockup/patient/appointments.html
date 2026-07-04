@@ -19,12 +19,21 @@
   </header>
   <main class="app-main">
     <h1 class="page-title">My appointments</h1>
+    <p class="page-subtitle">Email reminders sent 24 hours before each visit (US-7.2)</p>
+
+    <div class="filter-bar">
+      <button type="button" class="btn btn-secondary btn-sm" id="simulate-reminders">Simulate 24h reminders (demo)</button>
+    </div>
+
     <div id="list"></div>
+
+    <h2 style="font-size:1rem;margin:24px 0 12px;">Notification history</h2>
+    <div id="notif-list"></div>
   </main>
   <div class="modal-overlay hidden" id="cancel-modal" data-modal="cancel-modal">
     <div class="modal">
       <h2>Cancel appointment?</h2>
-      <p style="color:#64748b;font-size:0.9rem;">Cancellations require at least 24 hours notice.</p>
+      <p style="color:#64748b;font-size:0.9rem;">Cancellations require at least 24 hours notice. Scheduled reminders will be cancelled.</p>
       <div class="modal-actions">
         <button type="button" class="btn btn-secondary" data-close-modal="cancel-modal">Keep</button>
         <button type="button" class="btn btn-danger" id="confirm-cancel">Cancel appointment</button>
@@ -32,22 +41,28 @@
     </div>
   </div>
   <script src="../js/kaggle-fixtures.js"></script>
+  <script src="../js/demo-fixtures.js"></script>
   <script src="../js/fixtures.js"></script>
   <script src="../js/app.js"></script>
+  <script src="../js/reminders.js"></script>
   <script>
     const session = requireAuth(["Patient"]);
     let cancelId = null;
     if (session) {
       initShell(session, [], "appointments.html");
+
       function render() {
         const appts = getAppointments().filter(a => a.patientId === "P-1");
         document.getElementById("list").innerHTML = appts.map(a => `<div class="card" data-id="${a.id}">
           <h3>${a.displayDate}</h3>
           <p>${a.provider} · ${a.type} · ${a.location}</p>
-          <div class="card-actions">${statusBadge(a.status)}
+          <div class="card-actions">${statusBadge(a.status)} ${reminderBadge(a.id, a.status)}
             ${a.status === "scheduled" ? `<button type="button" class="btn btn-danger btn-sm cancel-btn">Cancel</button>` : ""}
           </div>
-        </div>`).join("");
+        </div>`).join("") || `<div class="empty-state">No appointments</div>`;
+
+        renderNotificationList(document.getElementById("notif-list"));
+
         document.querySelectorAll(".cancel-btn").forEach(btn => {
           btn.addEventListener("click", () => {
             cancelId = btn.closest(".card").dataset.id;
@@ -55,15 +70,22 @@
           });
         });
       }
-      document.getElementById("confirm-cancel").addEventListener("click", () => {
-        const list = getAppointments().map(a =>
-          String(a.id) === String(cancelId) ? { ...a, status: "cancelled" } : a
-        );
-        saveAppointments(list);
-        closeModal("cancel-modal");
-        showToast("Appointment cancelled — slot released", "success");
+
+      document.getElementById("simulate-reminders").addEventListener("click", () => {
+        const n = runDueReminders();
+        showToast(n ? `Sent ${n} reminder email(s)` : "No due reminders", n ? "success" : "warning");
         render();
       });
+
+      document.getElementById("confirm-cancel").addEventListener("click", () => {
+        saveAppointments(getAppointments().map(a =>
+          String(a.id) === String(cancelId) ? { ...a, status: "cancelled" } : a
+        ));
+        closeModal("cancel-modal");
+        showToast("Appointment cancelled — reminder removed", "success");
+        render();
+      });
+
       render();
     }
   </script>

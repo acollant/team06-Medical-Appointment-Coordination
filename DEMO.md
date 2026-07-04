@@ -30,9 +30,10 @@ Then use:
 ## Quick client walkthrough
 
 1. **Maria · Mobile app** → Chat → **Book appointment** → General Doctor → confirm in chat
-2. Type `nearest cardio` or `my appointments` in the chatbot
-3. Sign out → **Elena · Front desk** → Today's schedule + Call log
-4. Sign out → **David · Admin** → locations, utilization reports
+2. Type `nearest cardio`, `my reminders`, or `my appointments` in the chatbot
+3. **Appointments** (desktop) → **Simulate 24h reminders** — see email log update
+4. Sign out → **Elena · Front desk** → Check-in → **Send reminder** (1 h cooldown)
+5. Sign out → **David · Admin** → locations, utilization reports
 
 ## What's in the demo data
 

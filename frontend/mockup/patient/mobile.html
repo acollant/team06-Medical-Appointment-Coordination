@@ -49,6 +49,8 @@
     <section id="panel-appts" class="mobile-panel mobile-panel-home" aria-label="Appointments">
       <h2 style="font-size:0.95rem;margin:0 0 12px;">My appointments</h2>
       <div id="mobile-appt-list" class="mobile-appt-list"></div>
+      <h2 style="font-size:0.95rem;margin:20px 0 10px;">Reminders & notifications</h2>
+      <div id="mobile-notif-list"></div>
     </section>
 
     <nav class="mobile-tabbar" aria-label="Main">
@@ -64,6 +66,7 @@
   <script src="../js/app.js"></script>
   <script src="../js/search.js"></script>
   <script src="../js/chatbot.js"></script>
+  <script src="../js/reminders.js"></script>
   <script>
     const session = requireAuth(["Patient"]);
     if (session) {
@@ -120,14 +123,20 @@
           ? appts.map(a => `<div class="card">
               <strong>${a.displayDate}</strong>
               <p>${a.provider} · ${a.type}</p>
-              <p>${a.location} · ${statusBadge(a.status)}</p>
+              <p>${a.location} · ${statusBadge(a.status)} ${reminderBadge(a.id, a.status)}</p>
             </div>`).join("")
           : `<div class="empty-state">No appointments</div>`;
+        renderNotificationList(document.getElementById("mobile-notif-list"));
       }
 
       refreshMobileHome();
       refreshMobileAppointments();
       initChatbot();
+
+      const upcoming = getAppointments().find(a => a.patientId === "P-1" && a.status === "scheduled");
+      if (upcoming && getReminderStatus(upcoming.id, upcoming.status) === "scheduled") {
+        setTimeout(() => showToast(`Reminder scheduled for ${upcoming.displayDate}`, "success"), 800);
+      }
 
       const params = new URLSearchParams(location.search);
       if (params.get("tab") === "appts") showTab("appts");

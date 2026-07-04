@@ -86,5 +86,11 @@
     {"serviceId": "dermatology", "provider": "Dr. Lisa Wong", "providerId": 5, "locationId": "midtown", "date": "2025-09-11", "dateLabel": "Thu Sep 11", "time": "10:00", "display": "Thu Sep 11 · 10:00 AM", "type": "Skin Consultation", "location": "Our Clinic — Midtown"},
     {"serviceId": "dermatology", "provider": "Dr. Lisa Wong", "providerId": 5, "locationId": "midtown", "date": "2025-09-12", "dateLabel": "Fri Sep 12", "time": "15:00", "display": "Fri Sep 12 · 3:00 PM", "type": "Skin Consultation", "location": "Our Clinic — Midtown"},
     {"serviceId": "dermatology", "provider": "Dr. Lisa Wong", "providerId": 5, "locationId": "midtown", "date": "2025-09-15", "dateLabel": "Mon Sep 15", "time": "09:15", "display": "Mon Sep 15 · 9:15 AM", "type": "Follow-up Visit", "location": "Our Clinic — Midtown"}
+  ],
+  "notifications": [
+    {"id": "n-001", "appointmentId": 101, "type": "confirmation", "channel": "email", "status": "sent", "recipient": "maria.santos@example.com", "subject": "Appointment confirmed — Wed Sep 10", "sentAt": "2025-09-09T10:05:00", "manual": false},
+    {"id": "n-002", "appointmentId": 101, "type": "reminder", "channel": "email", "status": "scheduled", "recipient": "maria.santos@example.com", "subject": "Reminder: appointment tomorrow at 10:00 AM", "scheduledAt": "2025-09-09T10:00:00", "manual": false},
+    {"id": "n-003", "appointmentId": 104, "type": "confirmation", "channel": "email", "status": "sent", "recipient": "maria.santos@example.com", "subject": "Appointment confirmed — Thu Sep 11 Skin Consultation", "sentAt": "2025-09-08T14:22:00", "manual": false},
+    {"id": "n-004", "appointmentId": 104, "type": "reminder", "channel": "email", "status": "scheduled", "recipient": "maria.santos@example.com", "subject": "Reminder: Dr. Lisa Wong tomorrow", "scheduledAt": "2025-09-10T10:00:00", "manual": false}
   ]
 }

@@ -40,6 +40,8 @@ isProject: false
 
 # Medical Appointment Coordination — User Stories, Architecture & Test Data
 
+> **Architecture reference:** [ARCHITECTURE.md](ARCHITECTURE.md) — layered design, domain model, API, notification/reminder subsystem, deployment.
+
 ## Goals
 
 Build a **full-clinic** appointment coordination platform where **patients**, **providers**, **front-desk staff**, and **clinic admins** can manage scheduling end-to-end. Stack: **Django + Django REST Framework (DRF) + PostgreSQL + React (TypeScript)**.

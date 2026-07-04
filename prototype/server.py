@@ -157,13 +157,30 @@ class PrototypeHandler(SimpleHTTPRequestHandler):
     def do_GET(self) -> None:
         parsed = urlparse(self.path)
         if parsed.path.startswith("/api/v1/"):
-            self._handle_api(parsed)
+            self._handle_api(parsed, "GET")
             return
         super().do_GET()
 
-    def _handle_api(self, parsed) -> None:
+    def do_POST(self) -> None:
+        parsed = urlparse(self.path)
+        if parsed.path.startswith("/api/v1/"):
+            self._handle_api(parsed, "POST")
+            return
+        self._json_response({"error": "Method not allowed"}, 405)
+
+    def _read_json_body(self) -> dict:
+        length = int(self.headers.get("Content-Length", 0))
+        if not length:
+            return {}
+        try:
+            return json.loads(self.rfile.read(length).decode("utf-8"))
+        except json.JSONDecodeError:
+            return {}
+
+    def _handle_api(self, parsed, method: str = "GET") -> None:
         params = parse_qs(parsed.query)
         path = parsed.path.rstrip("/")
+        body_in = self._read_json_body() if method == "POST" else {}
 
         if path == "/api/v1/health":
             body = {"status": "ok", "prototype": True, "clinic": "Our Clinic"}
@@ -183,6 +200,37 @@ class PrototypeHandler(SimpleHTTPRequestHandler):
             body = {"results": DATA["providers"]}
         elif path == "/api/v1/locations":
             body = {"results": DATA["locations"]}
+        elif path == "/api/v1/notifications":
+            appt_id = params.get("appointment", [None])[0]
+            logs = DATA.get("notifications", [])
+            if appt_id:
+                logs = [n for n in logs if str(n.get("appointmentId")) == str(appt_id)]
+            body = {"results": logs, "count": len(logs)}
+        elif path == "/api/v1/notifications/reminder/run-due" and method == "POST":
+            due = [n for n in DATA.get("notifications", []) if n.get("type") == "reminder" and n.get("status") == "scheduled"]
+            for n in due:
+                n["status"] = "sent"
+                n["sentAt"] = "2025-09-09T12:00:00"
+            body = {"processed": len(due), "message": f"Sent {len(due)} reminder(s)"}
+        elif path == "/api/v1/notifications/reminder" and method == "POST":
+            appt_id = body_in.get("appointmentId")
+            manual = body_in.get("manual", True)
+            if not appt_id:
+                self._json_response({"error": "appointmentId required"}, 400)
+                return
+            entry = {
+                "id": f"n-manual-{appt_id}",
+                "appointmentId": appt_id,
+                "type": "reminder",
+                "channel": "email",
+                "status": "sent",
+                "recipient": DATA.get("patientProfile", {}).get("email", "patient@example.com"),
+                "subject": f"Manual reminder for appointment {appt_id}",
+                "sentAt": "2025-09-09T12:00:00",
+                "manual": manual,
+            }
+            DATA.setdefault("notifications", []).append(entry)
+            body = {"ok": True, "notification": entry}
         else:
             self._json_response({"error": "Not found"}, 404)
             return
@@ -220,6 +268,7 @@ def main() -> None:
     print(f"  UI:     {url}")
     print(f"  Guide:  {url}/demo.html")
     print(f"  API:    {url}/api/v1/health")
+    print(f"  Reminders: POST {url}/api/v1/notifications/reminder/run-due")
     print()
     print("  Demo personas on the sign-in page — no password needed.")
     print("  Press Ctrl+C to stop.")

@@ -48,6 +48,7 @@
   <script src="../js/demo-fixtures.js"></script>
   <script src="../js/fixtures.js"></script>
   <script src="../js/app.js"></script>
+  <script src="../js/reminders.js"></script>
   <script>
     const session = requireAuth(["Patient"]);
     if (session) {
@@ -76,6 +77,7 @@
           <h3>${u.displayDate}</h3>
           <p>${u.provider} · ${u.type}</p>
           <p>${u.location} · <span class="channel-tag">${(u.bookingChannel || "web").replace("_", " ")}</span></p>
+          <p style="margin-top:6px;">${reminderBadge(u.id, u.status)}</p>
           <div class="card-actions">${statusBadge(u.status)}
             <a href="appointments.html" class="btn btn-secondary btn-sm">Manage</a>
           </div>

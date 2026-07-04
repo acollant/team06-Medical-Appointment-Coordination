@@ -75,6 +75,7 @@ function chatWelcome(messagesEl) {
       { id: "book_start", label: "Book appointment" },
       { id: "closest_start", label: "Nearest doctor" },
       { id: "my_appointments", label: "My appointments" },
+      { id: "my_reminders", label: "My reminders" },
       { id: "help", label: "What can you do?" },
     ],
   });
@@ -86,6 +87,7 @@ function handleChatAction(action, slotIndex = null) {
     book_start: "Book an appointment",
     closest_start: "Find the nearest doctor",
     my_appointments: "Show my appointments",
+    my_reminders: "My reminders",
     help: "What can you do?",
     confirm_book: "Yes, book it",
     cancel_flow: "Cancel an appointment",
@@ -175,6 +177,11 @@ function runChatAction(messagesEl, action, slotIndex) {
     return;
   }
 
+  if (action === "my_reminders") {
+    showMyReminders(messagesEl);
+    return;
+  }
+
   if (action === "cancel_flow") {
     showCancelOptions(messagesEl);
     return;
@@ -250,6 +257,24 @@ function showClosestMatch(messagesEl, serviceId) {
     CHATBOT.lastSlots = [slot, ...alternatives.slice(0, 2)];
     chatBotReply(messagesEl, `Say "show more slots" for ${alternatives.length} other nearby option${alternatives.length === 1 ? "" : "s"}.`);
   }
+}
+
+function showMyReminders(messagesEl) {
+  const upcoming = getAppointments().filter((a) => a.patientId === "P-1" && a.status === "scheduled");
+  if (!upcoming.length) {
+    chatBotReply(messagesEl, "No upcoming visits — no reminders scheduled.", {
+      quickReplies: [{ id: "book_start", label: "Book appointment" }],
+    });
+    return;
+  }
+  const lines = upcoming.map((a) => {
+    const st = getReminderStatus(a.id, a.status);
+    const label = st === "sent" ? "Reminder sent ✓" : st === "scheduled" ? "Reminder scheduled (24h before)" : "No reminder";
+    return `• ${a.displayDate} — ${label}`;
+  });
+  chatBotReply(messagesEl, `Your appointment reminders:\n\n${lines.join("\n")}`, {
+    quickReplies: [{ id: "my_appointments", label: "View appointments" }],
+  });
 }
 
 function showMyAppointments(messagesEl) {
@@ -328,10 +353,12 @@ function completeChatBooking(messagesEl, slot) {
     type: slot.type,
   }));
 
+  queueConfirmation(appt);
+
   CHATBOT.pendingSlot = null;
   CHATBOT.state = "idle";
 
-  chatBotReply(messagesEl, `You're booked!\n\n${slot.display}\n${slot.provider} · ${slot.type}\n${slot.location}\n\nConfirmation email sent. Reminder 24 h before your visit.`, {
+  chatBotReply(messagesEl, `You're booked!\n\n${slot.display}\n${slot.provider} · ${slot.type}\n${slot.location}\n\nConfirmation email sent. Reminder scheduled 24 h before your visit.`, {
     quickReplies: [
       { id: "my_appointments", label: "View appointments" },
       { id: "book_start", label: "Book another" },
@@ -348,6 +375,7 @@ function parseChatIntent(text) {
   if (/book|schedule|appointment|see a doctor|new visit/.test(t)) return { action: "book_start" };
   if (/nearest|closest|near me|nearby/.test(t)) return { action: "closest_start" };
   if (/my appointment|upcoming|when is/.test(t)) return { action: "my_appointments" };
+  if (/reminder|remind me|notification/.test(t)) return { action: "my_reminders" };
   if (/cancel/.test(t)) return { action: "cancel_flow" };
   if (/more slot|show more|other slot/.test(t)) return { action: "show_more" };
   if (/cardio|heart/.test(t)) {

@@ -27,9 +27,11 @@
     </p>
   </main>
   <script src="../js/kaggle-fixtures.js"></script>
+  <script src="../js/demo-fixtures.js"></script>
   <script src="../js/fixtures.js"></script>
   <script src="../js/app.js"></script>
   <script src="../js/search.js"></script>
+  <script src="../js/reminders.js"></script>
   <script>
     const session = requireAuth(["Patient"]);
     if (session) {
@@ -39,8 +41,20 @@
         <h3>${booking.provider || "Dr. James Chen"}</h3>
         <p>${booking.date || "2025-09-08"} at ${booking.time || "10:00"} · Our Clinic</p>
         <p>${booking.type || "Follow-up Visit"}${booking.serviceId ? ` · ${(getServiceById(booking.serviceId) || {}).patientLabel || ""}` : ""} · ${statusBadge("scheduled")}</p>
-        <p style="margin-top:8px;font-size:0.85rem;">A reminder will be sent 24 hours before your visit.</p>`;
+        <p style="margin-top:8px;font-size:0.85rem;">A reminder will be sent 24 hours before your visit.</p>
+        <p id="reminder-status" style="font-size:0.85rem;margin-top:4px;"></p>`;
       showToast("Appointment booked successfully", "success");
+
+      const lastAppt = getAppointments().filter(a => a.patientId === "P-1" && a.status === "scheduled").pop();
+      if (lastAppt && !getNotificationsForAppointment(lastAppt.id).some(n => n.type === "confirmation")) {
+        queueConfirmation(lastAppt);
+      }
+      const apptId = lastAppt?.id || 101;
+      const rs = getReminderStatus(apptId, "scheduled");
+      const el = document.getElementById("reminder-status");
+      if (el) el.innerHTML = rs === "scheduled"
+        ? `<span class="badge badge-scheduled">Reminder scheduled (T−24 h)</span>`
+        : rs === "sent" ? `<span class="badge badge-checked_in">Reminder sent</span>` : "";
     }
   </script>
 </body>

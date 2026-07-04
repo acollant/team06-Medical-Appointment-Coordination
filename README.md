@@ -11,7 +11,9 @@ team06-Medical-Appointment-Coordination/
 ├── data/
 │   ├── kaggle/healthcare-appointment-booking-calls/2024/   # Call transcript JSON
 │   └── scripts/import_kaggle_calls.py                      # Parse → fixtures
-├── docs/PLAN.md
+├── docs/
+│   ├── PLAN.md                 # User stories, NFRs, datasets
+│   └── ARCHITECTURE.md         # Software architecture
 ├── frontend/mockup/                                        # Clickable prototype
 └── backend/                                                # Django API (Phase 1)
 ```
@@ -33,7 +35,7 @@ Opens **http://localhost:8080** in your browser automatically.
 | http://localhost:8080/demo.html | Step-by-step client demo |
 | http://localhost:8080/api/v1/health | Mock API health check |
 
-See **[DEMO.md](DEMO.md)** for the full walkthrough · **[prototype/README.md](prototype/README.md)** for API details.
+See **[DEMO.md](DEMO.md)** for the full walkthrough · **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** for software architecture · **[prototype/README.md](prototype/README.md)** for API details.
 
 **Requirements:** Python 3.9+ only (no pip install).
 

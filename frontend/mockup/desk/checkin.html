@@ -21,14 +21,16 @@
   </header>
   <main class="app-main">
     <h1 class="page-title">Patient check-in</h1>
+    <p class="page-subtitle">Send manual reminder emails (US-5.5) — 1 hour cooldown per appointment</p>
     <div id="checkin-list"></div>
   </main>
   <script src="../js/kaggle-fixtures.js"></script>
+  <script src="../js/demo-fixtures.js"></script>
   <script src="../js/fixtures.js"></script>
   <script src="../js/app.js"></script>
+  <script src="../js/reminders.js"></script>
   <script>
     const session = requireAuth(["FrontDesk"]);
-    const cooldown = {};
     if (session) {
       initShell(session, [], "checkin.html");
       const scheduled = FIXTURES.deskSchedule.filter(r => r.status === "scheduled" && r.id);
@@ -37,6 +39,7 @@
         <p>${row.provider} · ${row.type}</p>
         <div class="card-actions">
           ${statusBadge(row.status)}
+          ${reminderBadge(row.id, "scheduled")}
           <button type="button" class="btn btn-primary btn-sm checkin-btn">Check in</button>
           <button type="button" class="btn btn-secondary btn-sm remind-btn">Send reminder</button>
         </div>
@@ -44,7 +47,10 @@
       document.querySelectorAll(".checkin-btn").forEach(btn => {
         btn.addEventListener("click", () => {
           const card = btn.closest(".card");
-          card.querySelector(".badge").outerHTML = statusBadge("checked_in");
+          card.querySelector(".badge-scheduled")?.replaceWith;
+          const badges = card.querySelector(".card-actions");
+          const firstBadge = badges.querySelector(".badge");
+          if (firstBadge) firstBadge.outerHTML = statusBadge("checked_in");
           btn.remove();
           showToast("Patient checked in — provider calendar updated", "success");
         });
@@ -52,13 +58,19 @@
       document.querySelectorAll(".remind-btn").forEach(btn => {
         btn.addEventListener("click", () => {
           const id = btn.closest(".card").dataset.id;
-          const now = Date.now();
-          if (cooldown[id] && now - cooldown[id] < 3600000) {
-            showToast("Reminder cooldown — try again in 1 hour", "warning");
+          const result = sendReminder(id, { manual: true });
+          if (!result.ok) {
+            showToast(result.error, result.code === 429 ? "warning" : "error");
             return;
           }
-          cooldown[id] = now;
-          showToast("Reminder email sent", "success");
+          showToast(result.message, "success");
+          const card = btn.closest(".card");
+          const existing = card.querySelector(".badge-scheduled");
+          if (existing && existing.textContent.includes("Reminder")) {
+            existing.outerHTML = reminderBadge(id, "scheduled");
+          } else {
+            btn.insertAdjacentHTML("beforebegin", reminderBadge(id, "scheduled"));
+          }
         });
       });
     }

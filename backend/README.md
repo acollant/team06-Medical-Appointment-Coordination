@@ -1,6 +1,6 @@
 # Backend (Phase 1)
 
-Django + DRF API. See [docs/PLAN.md](../docs/PLAN.md).
+Django + DRF API. See [docs/PLAN.md](../docs/PLAN.md) and [docs/ARCHITECTURE.md](../docs/ARCHITECTURE.md).
 
 ## Planned models (Kaggle-aligned)
 
@@ -11,7 +11,8 @@ Django + DRF API. See [docs/PLAN.md](../docs/PLAN.md).
 | `Location` | Multi-site clinics with lat/lng for distance search |
 | `Provider` | Specialty, location FK, lat/lng at practice site |
 | `PatientProfile` | Saved address/ZIP with geocoded coordinates |
-| `Appointment` | Includes `booking_channel` (phone, phone_ivr, web, walk_in), `source_call_id` |
+| `Appointment` | Includes `booking_channel`, `source_call_id` |
+| `NotificationLog` | Confirmation + T−24 h reminder delivery audit |
 
 ## Planned availability APIs
 
@@ -21,10 +22,20 @@ Django + DRF API. See [docs/PLAN.md](../docs/PLAN.md).
 | `GET /api/v1/availability/closest?service=&lat=&lng=` | US-4.7 | Nearest practitioner with next open slot |
 | `GET /api/v1/providers?specialty=&location=` | US-4.1 | Provider search with optional distance |
 
+## Planned notification APIs
+
+| Endpoint | Story | Description |
+|----------|-------|-------------|
+| `GET /api/v1/notifications?appointment=` | US-4.4 | List confirmation/reminder log for appointment |
+| `POST /api/v1/notifications/reminder` | US-5.5 | Front desk manual reminder (1 h cooldown) |
+| Celery beat job | US-7.2 | T−24 h reminder batch (idempotent) |
+
+Implemented in Phase 0 prototype: `prototype/server.py` + `frontend/mockup/js/reminders.js`.
+
 ## Seed data
 
 ```bash
 python3 data/scripts/import_kaggle_calls.py
-# Demo mock data: frontend/mockup/js/demo-fixtures.js (3 sites, 6 providers, 12 slots)
+# Demo: frontend/mockup/js/demo-fixtures.js, js/reminders.js
 # Future: python manage.py seed_from_kaggle --dir data/kaggle/.../2024
 ```
