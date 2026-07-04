@@ -304,6 +304,7 @@ flowchart LR
 | US-4.7 | P-1 Maria (Patient) | — | Patient finds closest practitioner with availability |
 | US-4.8 | P-1 Maria (Patient) | — | Patient uses mobile app with chatbot assistant for booking |
 | US-4.9 | P-1 Maria (Patient) | — | Patient calls doctor or books online visit when no in-person slots |
+| US-4.10 | P-1 Maria (Patient) | — | Patient calls a doctor directly from mobile app (Call tab or chat) |
 | US-4.2 | P-1 Maria (Patient) | P-3 (books on behalf) | Patient self-books; desk uses same flow |
 | US-4.3 | P-1 Maria (Patient) | — | Patient cancels/reschedules own appointments |
 | US-4.4 | P-1 Maria (Patient) | P-3 (manual re-send) | Patient receives automated reminders |
@@ -324,7 +325,7 @@ flowchart LR
 
 | Persona | Stories owned (primary) | Count |
 |---------|-------------------------|-------|
-| P-1 Maria (Patient) | US-1.1, US-1.3, US-4.1, US-4.6, US-4.7, US-4.8, US-4.9, US-4.2–4.5, US-7.1, US-7.2 | 13 |
+| P-1 Maria (Patient) | US-1.1, US-1.3, US-4.1, US-4.6, US-4.7, US-4.8, US-4.9, US-4.10, US-4.2–4.5, US-7.1, US-7.2 | 14 |
 | P-2 Dr. Chen (Provider) | US-3.1–3.4, US-7.3 | 5 |
 | P-3 Elena (FrontDesk) | US-5.1–5.5 | 5 |
 | P-4 David (Admin) | US-1.2, US-1.4, US-2.1–2.4, US-6.1–6.3 | 8 |
@@ -376,6 +377,7 @@ flowchart LR
 | US-4.7 | P-1 | As patient, I can find the closest practitioner with an open slot | P0 | • `GET /api/v1/availability/closest?service={id}&lat=&lng=` (or ZIP geocode) returns nearest provider with earliest open **in-person** slot<br>• Response includes practitioner name, specialty, clinic location, distance (km/mi), next slot datetime<br>• Alternatives list includes other nearby providers ranked by distance then time<br>• No in-person slots returns HTTP 200 with empty result; **mobile chatbot offers US-4.9** (call doctor / online visit)<br>• Uses patient saved address from profile when lat/lng omitted<br>• Search p95 ≤ 500 ms (NFR-1.1) |
 | US-4.8 | P-1 | As patient, I can book and manage appointments via a mobile chatbot | P0 | • Mobile web/PWA layout (max-width 480px, bottom nav, safe-area insets)<br>• Chatbot handles: book by service, nearest doctor, list appointments, cancel<br>• When in-person search is empty, chatbot routes to **US-4.9** telehealth fallback (call / online meeting)<br>• Quick-reply chips and in-chat slot cards; natural-language intents for book/cancel/nearest/call/online<br>• In-person booking via chat creates appointment with `booking_channel=mobile_chat`<br>• Chat state syncs with appointment list on Home and Visits tabs<br>• WCAG touch targets ≥ 44px; works offline for read-only fixture data (Phase 0 mockup) |
 | US-4.9 | P-1 | As patient, when no in-person slots exist I can call my doctor or book an online video visit | P0 | • Triggered when US-4.6 / US-4.7 return zero in-person slots (mobile chatbot primary channel; desktop Phase 2)<br>• **Call doctor** opens device dialer with primary provider phone (`tel:` link); toast confirms action<br>• **Book online meeting** lists telehealth slots from `GET /api/v1/availability/online?service=` (prototype: `onlineMeetingsByService` fixture)<br>• Online booking creates appointment with `booking_channel=telehealth`, `location=Online video visit`, `meeting_url`, optional `meeting_id`<br>• Confirmation email includes video join link; T−24 h reminder queued (same as in-person, US-7.1 / US-7.2)<br>• Demo: Skin Care has no in-person slots (Kaggle call 005) → Dr. Lisa Wong call + online slots |
+| US-4.10 | P-1 | As patient, I can call a doctor directly from the mobile app | P0 | • Dedicated **Call** tab lists all callable providers with phone numbers<br>• Filter by service (Cardio, General Doctor, Skin Care); each row has **Call** button (`tel:` link, ≥ 44px touch target)<br>• Chat quick reply **Call a doctor** → pick specialty → choose provider → dial<br>• Natural-language intent: "call a doctor", "speak to doctor", "phone doctor"<br>• Home tab shortcut **Call a doctor** opens Call tab<br>• Uses `ProviderProfile.phone`; toast confirms dialer launch |
 | US-4.2 | P-1 | As patient, I can see open slots and book an appointment | P0 | • Booking available slot returns HTTP 201; slot status → `booked`; exactly one appointment per slot<br>• Supports `modality=in_person \| telehealth`; telehealth slots may omit physical `location_id`<br>• Concurrent double-book: one HTTP 201, one HTTP 409 (NFR-1.3)<br>• Booking past slot returns HTTP 400<br>• Booking write p95 ≤ 800 ms (NFR-1.2)<br>• Duplicate POST with same idempotency key does not create duplicate appointment (NFR-3.7) |
 | US-4.3 | P-1 | As patient, I can reschedule or cancel within policy rules | P0 | • Cancel ≥ cancellation window (default 24 h) before start: status → `cancelled`, slot → `available`, event logged<br>• Cancel inside window returns HTTP 400 with policy message; status unchanged<br>• Reschedule atomically frees old slot and books new slot in one transaction<br>• Reschedule subject to same lead-time rules as new booking |
 | US-4.4 | P-1 | As patient, I receive email/SMS reminders | P1 | • Email reminder sent once at T−24 h (clinic local time); `NotificationLog` status `sent`<br>• Cancelled appointments receive no reminder<br>• SMS deferred to Phase 2; MVP delivers email only<br>• Reminder job failure does not alter appointment record (NFR-3.6) |
@@ -502,7 +504,7 @@ Static, clickable HTML/CSS prototype for stakeholder review **before** backend i
 | SCR-02 | Register | All | US-1.1 | `register.html` |
 | SCR-03 | Forgot password | All | US-1.3 | `forgot-password.html` |
 | SCR-04 | Patient dashboard | P-1 | US-4.5 | `patient/dashboard.html` |
-| SCR-04b | Patient mobile app (chatbot) | P-1 | US-4.8, US-4.9, US-4.6, US-4.7 | `patient/mobile.html` |
+| SCR-04b | Patient mobile app (chatbot) | P-1 | US-4.8, US-4.9, US-4.10, US-4.6, US-4.7 | `patient/mobile.html` |
 | SCR-05 | Find availability (by service / closest / by provider) | P-1 | US-4.1, US-4.6, US-4.7 | `patient/search.html` |
 | SCR-06 | Select slot & book | P-1 | US-4.2, US-7.1 | `patient/book.html` |
 | SCR-07 | Booking confirmation | P-1 | US-7.1 | `patient/confirmation.html` |
@@ -743,6 +745,7 @@ flowchart TB
 | US-4.6 | SCR-05 (service tab) | Select Cardio → 4 slots; General Doctor → 5 slots; Skin Care → no in-person slots (see US-4.9); sort by nearest |
 | US-4.8 | SCR-04b (mobile chat) | Tap Book → General Doctor → book slot; type "nearest cardio"; cancel via chat |
 | US-4.9 | SCR-04b (mobile chat) | Tap Book → Skin Care → no in-person slots → Call Dr. Wong or Book online meeting → confirm |
+| US-4.10 | SCR-04b (Call tab) | Open **Call** tab → filter Cardio → tap Call on Dr. Chen; or Chat → Call a doctor → pick specialty |
 | US-4.7 | SCR-05 (closest tab) | General Doctor from ZIP 11201 → Dr. Robert Kim (Brooklyn); Cardio → Dr. James Chen |
 | US-4.2 | SCR-06 → SCR-07 | Select slot → Confirm → confirmation page |
 | US-4.3 | SCR-08 | Cancel button → modal → slot returns to available on SCR-06 |

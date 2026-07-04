@@ -44,8 +44,9 @@ python3 ../../data/scripts/import_kaggle_calls.py
 
 - **US-4.8** — Chatbot: book by service, nearest doctor, list/cancel appointments, reminders
 - **US-4.9** — When in-person slots are empty: **Call doctor** (`tel:`) or **Book online meeting** (video visit with join link)
+- **US-4.10** — **Call tab**: browse doctors by specialty and tap Call; chat → "Call a doctor"
 
-Try: Book → **Skin Care** → Call Dr. Wong or Book online meeting → confirm.
+Try: **Call** tab → Cardio → Call Dr. Chen; or Book → **Skin Care** → telehealth fallback.
 
 ## Call log (front-desk)
 
@@ -56,7 +57,7 @@ Try: Book → **Skin Care** → Call Dr. Wong or Book online meeting → confirm
 | Screen | Persona | Stories |
 |--------|---------|---------|
 | Patient search (service / closest / provider) | P-1 | US-4.1, US-4.6, US-4.7 |
-| Patient mobile + chatbot | P-1 | US-4.8, US-4.9, US-4.6, US-4.7 |
+| Patient mobile + chatbot | P-1 | US-4.8, US-4.9, US-4.10, US-4.6, US-4.7 |
 | Desk call log | P-3 | US-5.1 (phone channel) |
 | Book / confirm | P-1 | US-4.2, US-7.1 |
 

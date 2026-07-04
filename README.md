@@ -116,6 +116,7 @@ team06-Medical-Appointment-Coordination/
 | Closest practitioner | US-4.7 | Patient → Closest to me tab |
 | Mobile chatbot booking | US-4.8 | **Maria · Mobile app** → Chat |
 | Telehealth fallback (call / online) | US-4.9 | **Maria · Mobile app** → Book → **Skin Care** |
+| Call a doctor (direct) | US-4.10 | **Maria · Mobile app** → **Call** tab |
 | Appointment reminders | US-7.2, US-4.4 | Appointments → Simulate 24h reminders |
 | Front-desk call log | US-5.1 | Elena → Call log |
 | Manual reminder send | US-5.5 | Elena → Check-in → Send reminder |

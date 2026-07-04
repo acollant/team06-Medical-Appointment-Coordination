@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Our Clinic — Solution Presentation</title>
+  <style>
+    @page { size: landscape; margin: 0; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: Inter, system-ui, -apple-system, sans-serif;
+      color: #0f172a;
+      background: #fff;
+    }
+    .slide {
+      width: 100vw;
+      height: 100vh;
+      padding: 48px 56px;
+      page-break-after: always;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+    }
+    .slide:last-child { page-break-after: auto; }
+    .slide::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 6px;
+      background: #2563eb;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 28px;
+    }
+    .title { font-size: 2rem; font-weight: 700; color: #2563eb; line-height: 1.2; }
+    .subtitle { font-size: 0.95rem; color: #64748b; margin-top: 6px; }
+    .slide-num {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #2563eb;
+      background: #eff6ff;
+      padding: 6px 14px;
+      border-radius: 999px;
+    }
+    h2 { font-size: 1.15rem; margin: 18px 0 10px; color: #1e40af; }
+    h2:first-of-type { margin-top: 0; }
+    p, li { font-size: 0.92rem; line-height: 1.45; color: #334155; }
+    ul { margin: 8px 0 0 20px; }
+    li { margin-bottom: 6px; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      font-size: 0.82rem;
+    }
+    th, td {
+      border: 1px solid #e2e8f0;
+      padding: 8px 10px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th { background: #f1f5f9; font-weight: 600; color: #1e293b; }
+    .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; flex: 1; }
+    .cols-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-top: 12px; }
+    .card {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 14px 16px;
+    }
+    .card strong { display: block; font-size: 0.95rem; margin-bottom: 4px; color: #0f172a; }
+    .card span { font-size: 0.82rem; color: #64748b; }
+    .quote {
+      background: #eff6ff;
+      border-left: 4px solid #2563eb;
+      padding: 14px 18px;
+      margin: 14px 0;
+      font-size: 1rem;
+      font-weight: 500;
+      color: #1e3a8a;
+      line-height: 1.4;
+    }
+    .arch {
+      display: grid;
+      grid-template-rows: auto auto auto auto;
+      gap: 10px;
+      margin-top: 8px;
+      font-size: 0.78rem;
+    }
+    .arch-row {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .arch-box {
+      background: #fff;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 8px 12px;
+      text-align: center;
+      min-width: 100px;
+    }
+    .arch-box.primary { background: #2563eb; color: #fff; border-color: #2563eb; }
+    .arch-box.domain { background: #eff6ff; border-color: #93c5fd; }
+    .arch-box.data { background: #f0fdf4; border-color: #86efac; }
+    .arch-arrow { text-align: center; color: #94a3b8; font-size: 0.75rem; }
+    .footer {
+      margin-top: auto;
+      padding-top: 12px;
+      font-size: 0.75rem;
+      color: #94a3b8;
+      border-top: 1px solid #e2e8f0;
+    }
+    .badge-done { color: #16a34a; font-weight: 600; }
+    .steps { counter-reset: step; list-style: none; margin-left: 0; }
+    .steps li { counter-increment: step; padding-left: 28px; position: relative; margin-bottom: 8px; }
+    .steps li::before {
+      content: counter(step);
+      position: absolute; left: 0;
+      width: 20px; height: 20px;
+      background: #2563eb; color: #fff;
+      border-radius: 50%;
+      font-size: 0.7rem; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      top: 1px;
+    }
+  </style>
+</head>
+<body>
+
+<section class="slide">
+  <div class="header">
+    <div>
+      <div class="title">Our Clinic — Medical Appointment Coordination</div>
+      <div class="subtitle">Team 06 · Problem &amp; Vision</div>
+    </div>
+    <div class="slide-num">Slide 1 / 5</div>
+  </div>
+  <div class="cols">
+    <div>
+      <h2>The problem</h2>
+      <ul>
+        <li>Patients rely on <strong>phone/IVR</strong> — long holds, unclear availability, dead ends when a specialty is full</li>
+        <li><strong>Multi-site clinics</strong> (Brooklyn, Midtown, Queens) — hard to find the nearest open slot</li>
+        <li>Front desk juggles walk-ins, phone bookings, and reminders without one live view</li>
+        <li>Missed appointments when confirmations and reminders are manual</li>
+      </ul>
+    </div>
+    <div>
+      <h2>Our vision</h2>
+      <p><strong>One coordinated platform</strong> for patients, providers, front desk, and admin — aligned with real healthcare appointment-call data (Kaggle 2024).</p>
+      <div class="cols-3">
+        <div class="card"><strong>Maria</strong><span>Patient — mobile chat, booking, reminders</span></div>
+        <div class="card"><strong>Dr. Chen</strong><span>Provider — calendar &amp; availability</span></div>
+        <div class="card"><strong>Elena</strong><span>Front desk — check-in, walk-ins</span></div>
+        <div class="card" style="grid-column: span 3; text-align: center;"><strong>David</strong><span>Admin — locations, utilization reports</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="footer">Demo: ./run-demo.sh → localhost:8080</div>
+</section>
+
+<section class="slide">
+  <div class="header">
+    <div>
+      <div class="title">Requirements</div>
+      <div class="subtitle">Functional &amp; non-functional (MVP P0)</div>
+    </div>
+    <div class="slide-num">Slide 2 / 5</div>
+  </div>
+  <h2>Functional requirements</h2>
+  <table>
+    <tr><th>Epic</th><th>User stories</th><th>What it must do</th></tr>
+    <tr><td>Patient booking</td><td>US-4.6, US-4.7</td><td>Search slots by service; find closest practitioner with availability</td></tr>
+    <tr><td>Mobile channel</td><td>US-4.8</td><td>Chatbot — book, nearest doctor, view/cancel appointments</td></tr>
+    <tr><td>Telehealth fallback</td><td>US-4.9</td><td>No in-person slots → call doctor or book online video visit</td></tr>
+    <tr><td>Booking</td><td>US-4.2, US-4.3</td><td>Book, cancel, reschedule; no double-booking</td></tr>
+    <tr><td>Front desk</td><td>US-5.1–5.3</td><td>Walk-in booking, check-in, day schedule across providers</td></tr>
+    <tr><td>Notifications</td><td>US-7.1, US-7.2</td><td>Confirmation email + T−24 h reminder (telehealth includes join link)</td></tr>
+  </table>
+  <h2>Non-functional requirements</h2>
+  <table>
+    <tr><th>NFR</th><th>Target</th><th>NFR</th><th>Target</th></tr>
+    <tr><td>Search latency</td><td>p95 ≤ 500 ms</td><td>Security</td><td>JWT + RBAC</td></tr>
+    <tr><td>Booking write</td><td>p95 ≤ 800 ms</td><td>Data source</td><td>Kaggle call transcripts</td></tr>
+    <tr><td>Concurrency</td><td>One slot → one appointment</td><td>Notifications</td><td>Async; booking not blocked by email queue</td></tr>
+  </table>
+  <div class="footer">docs/PLAN.md — full acceptance criteria per story</div>
+</section>
+
+<section class="slide">
+  <div class="header">
+    <div>
+      <div class="title">Design</div>
+      <div class="subtitle">Architecture &amp; domain model</div>
+    </div>
+    <div class="slide-num">Slide 3 / 5</div>
+  </div>
+  <div class="cols">
+    <div>
+      <h2>Layered architecture</h2>
+      <div class="arch">
+        <div class="arch-row">
+          <div class="arch-box">React SPA</div>
+          <div class="arch-box">Mobile PWA + chatbot</div>
+          <div class="arch-box">Front desk / Admin</div>
+        </div>
+        <div class="arch-arrow">↓ HTTPS / JSON ↓</div>
+        <div class="arch-row">
+          <div class="arch-box primary">Django REST API · JWT + RBAC</div>
+        </div>
+        <div class="arch-arrow">↓</div>
+        <div class="arch-row">
+          <div class="arch-box domain">Availability</div>
+          <div class="arch-box domain">Telehealth</div>
+          <div class="arch-box domain">Scheduling</div>
+          <div class="arch-box domain">Notifications</div>
+        </div>
+        <div class="arch-arrow">↓</div>
+        <div class="arch-row">
+          <div class="arch-box data">PostgreSQL</div>
+          <div class="arch-box data">Redis + Celery</div>
+        </div>
+      </div>
+      <h2>Key design decisions</h2>
+      <ul>
+        <li>Empty in-person search → telehealth (not a dead end)</li>
+        <li>Same booking pipeline for in-person and video visits</li>
+        <li>Async notifications — booking succeeds if email queue is down</li>
+      </ul>
+    </div>
+    <div>
+      <h2>Core domain model</h2>
+      <table>
+        <tr><th>Entity</th><th>Responsibility</th></tr>
+        <tr><td>Service</td><td>Cardio, General Doctor, Skin Care (patient-friendly labels)</td></tr>
+        <tr><td>Slot</td><td>Bookable unit — modality: in-person or telehealth</td></tr>
+        <tr><td>Appointment</td><td>Status + booking_channel (web, phone, mobile_chat, telehealth)</td></tr>
+        <tr><td>Provider</td><td>Specialty, location, phone, telehealth enabled</td></tr>
+        <tr><td>NotificationLog</td><td>Confirmation &amp; reminder audit trail</td></tr>
+        <tr><td>CallRecord</td><td>Phone/IVR transcripts (Kaggle alignment)</td></tr>
+      </table>
+    </div>
+  </div>
+  <div class="footer">docs/ARCHITECTURE.md</div>
+</section>
+
+<section class="slide">
+  <div class="header">
+    <div>
+      <div class="title">Solution</div>
+      <div class="subtitle">Phase 0 prototype — what we built</div>
+    </div>
+    <div class="slide-num">Slide 4 / 5</div>
+  </div>
+  <div class="cols">
+    <div>
+      <h2>Deliverables</h2>
+      <table>
+        <tr><th>Component</th><th>Deliverable</th></tr>
+        <tr><td>Mockup</td><td>17 screens — patient, provider, desk, admin</td></tr>
+        <tr><td>Mobile app</td><td>Chatbot, Home, Visits tabs</td></tr>
+        <tr><td>Search</td><td>By service + closest practitioner (haversine)</td></tr>
+        <tr><td>Telehealth</td><td>Call doctor + online meeting with join URL</td></tr>
+        <tr><td>Reminders</td><td>T−24 h scheduling + notification log</td></tr>
+        <tr><td>Mock API</td><td>prototype/server.py — availability, notifications</td></tr>
+      </table>
+      <h2>Tech stack</h2>
+      <table>
+        <tr><th>Now (Phase 0)</th><th>Planned (Phase 1+)</th></tr>
+        <tr><td>HTML/CSS/JS + Python mock server</td><td>Django 5 + DRF + PostgreSQL + Redis/Celery + React</td></tr>
+      </table>
+    </div>
+    <div>
+      <h2>Demo flow (~60 seconds)</h2>
+      <ol class="steps">
+        <li><strong>Maria · Mobile app</strong> → Chat → Book General Doctor → confirm</li>
+        <li>Book <strong>Skin Care</strong> → no in-person slots → Call Dr. Wong or Book online meeting</li>
+        <li><strong>Elena · Front desk</strong> → Check-in → Send reminder</li>
+        <li><strong>Appointments</strong> → Simulate 24 h reminders → see email log</li>
+      </ol>
+    </div>
+  </div>
+  <div class="footer">./run-demo.sh · github.com/acollant/team06-Medical-Appointment-Coordination</div>
+</section>
+
+<section class="slide">
+  <div class="header">
+    <div>
+      <div class="title">Summary &amp; Next Steps</div>
+      <div class="subtitle">Value delivered &amp; roadmap</div>
+    </div>
+    <div class="slide-num">Slide 5 / 5</div>
+  </div>
+  <div class="quote">Our Clinic replaces phone tag with self-service booking, smart telehealth when slots are full, and automated reminders — one system for the whole practice.</div>
+  <div class="cols">
+    <div>
+      <h2>Benefits</h2>
+      <table>
+        <tr><th>Benefit</th><th>How</th></tr>
+        <tr><td>Fewer calls</td><td>Mobile chatbot + online search</td></tr>
+        <tr><td>No dead ends</td><td>Call doctor or video visit when in-person is full</td></tr>
+        <tr><td>Better utilization</td><td>Closest-practitioner search across 3 sites</td></tr>
+        <tr><td>Fewer no-shows</td><td>Confirmation + T−24 h reminders</td></tr>
+        <tr><td>Evidence-based</td><td>Requirements from Kaggle call transcripts</td></tr>
+      </table>
+    </div>
+    <div>
+      <h2>Roadmap</h2>
+      <table>
+        <tr><th>Phase</th><th>Scope</th><th>Status</th></tr>
+        <tr><td>0</td><td>Mockup, chatbot, telehealth, mock API</td><td class="badge-done">✓ Done</td></tr>
+        <tr><td>1</td><td>Django models, JWT auth, seed data</td><td>Planned</td></tr>
+        <tr><td>2</td><td>Booking API, React patient/provider UI</td><td>Planned</td></tr>
+        <tr><td>3</td><td>Front-desk flows, admin config</td><td>Planned</td></tr>
+        <tr><td>4</td><td>Celery email + E2E tests</td><td>Planned</td></tr>
+      </table>
+    </div>
+  </div>
+  <div class="footer">Team 06 · docs/PLAN.md · docs/ARCHITECTURE.md · DEMO.md</div>
+</section>
+
+</body>
+</html>

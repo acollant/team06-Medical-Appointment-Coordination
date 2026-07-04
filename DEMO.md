@@ -31,10 +31,11 @@ Then use:
 
 1. **Maria · Mobile app** → Chat → **Book appointment** → General Doctor → confirm in chat
 2. **Skin Care (no in-person slots)** → **Call Dr. Wong** or **Book online meeting** → confirm video visit
-3. Type `nearest cardio`, `my reminders`, or `my appointments` in the chatbot
-4. **Appointments** (desktop) → **Simulate 24h reminders** — see email log update
-5. Sign out → **Elena · Front desk** → Check-in → **Send reminder** (1 h cooldown)
-6. Sign out → **David · Admin** → locations, utilization reports
+3. **Call tab** → filter by specialty → tap **Call** on any doctor
+4. Type `nearest cardio`, `my reminders`, or `my appointments` in the chatbot
+5. **Appointments** (desktop) → **Simulate 24h reminders** — see email log update
+6. Sign out → **Elena · Front desk** → Check-in → **Send reminder** (1 h cooldown)
+7. Sign out → **David · Admin** → locations, utilization reports
 
 ## What's in the demo data
 

@@ -39,10 +39,18 @@
       <h2 style="font-size:0.95rem;margin:0 0 10px;">Upcoming</h2>
       <div id="mobile-upcoming"></div>
       <p style="margin-top:16px;">
-        <button type="button" class="btn btn-primary" style="width:100%;" data-goto-tab="chat">Ask assistant to book</button>
+        <button type="button" class="btn btn-primary" style="width:100%;margin-bottom:8px;" data-goto-tab="chat">Ask assistant to book</button>
+        <button type="button" class="btn btn-call-outline" style="width:100%;" data-goto-tab="call">📞 Call a doctor</button>
       </p>
       <h2 style="font-size:0.95rem;margin:20px 0 10px;">Locations</h2>
       <div id="mobile-locations"></div>
+    </section>
+
+    <!-- Call a doctor -->
+    <section id="panel-call" class="mobile-panel mobile-panel-home" aria-label="Call a doctor">
+      <h2 style="font-size:0.95rem;margin:0 0 4px;">Call a doctor</h2>
+      <p style="font-size:0.82rem;color:var(--color-text-muted);margin:0 0 14px;">Speak directly with a provider — no appointment needed.</p>
+      <div id="mobile-call-list"></div>
     </section>
 
     <!-- Appointments -->
@@ -55,6 +63,7 @@
 
     <nav class="mobile-tabbar" aria-label="Main">
       <button type="button" class="active" data-tab="chat"><span class="tab-icon">💬</span>Chat</button>
+      <button type="button" data-tab="call"><span class="tab-icon">📞</span>Call</button>
       <button type="button" data-tab="home"><span class="tab-icon">🏠</span>Home</button>
       <button type="button" data-tab="appts"><span class="tab-icon">📅</span>Visits</button>
     </nav>
@@ -89,6 +98,7 @@
           b.classList.toggle("active", b.dataset.tab === tab);
         });
         if (tab === "chat") document.getElementById("chat-input")?.focus();
+        if (tab === "call") renderMobileCallDoctorList(document.getElementById("mobile-call-list"));
       }
 
       document.querySelectorAll(".mobile-tabbar [data-tab]").forEach((btn) => {
@@ -132,6 +142,7 @@
 
       refreshMobileHome();
       refreshMobileAppointments();
+      renderMobileCallDoctorList(document.getElementById("mobile-call-list"));
       initChatbot();
 
       const upcoming = getAppointments().find(a => a.patientId === "P-1" && a.status === "scheduled");
@@ -141,6 +152,7 @@
 
       const params = new URLSearchParams(location.search);
       if (params.get("tab") === "appts") showTab("appts");
+      if (params.get("tab") === "call") showTab("call");
       if (params.get("action") === "book") {
         showTab("chat");
         setTimeout(() => handleChatAction("book_start", null), 500);

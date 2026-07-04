@@ -353,7 +353,7 @@ class NotificationService:
 
 ---
 
-## 6. Mobile patient channel (US-4.8, US-4.9)
+## 6. Mobile patient channel (US-4.8, US-4.9, US-4.10)
 
 ```mermaid
 flowchart LR
@@ -368,7 +368,8 @@ flowchart LR
 
 - **Mobile-first** layout (`css/mobile.css`), max-width 480px, bottom tab bar.
 - **Chatbot (US-4.8)** handles book, nearest doctor, list/cancel — uses same domain functions as desktop search.
-- **Telehealth fallback (US-4.9):** when `searchAvailabilityByService()` or `findClosestPractitioner()` returns no in-person slots, `showNoAvailabilityFallback()` offers call-doctor (`tel:`) and online meeting booking; online appointments use `bookingChannel: "telehealth"`.
+- **Telehealth fallback (US-4.9):** when in-person search is empty, chatbot offers call-doctor or online meeting booking.
+- **Call a doctor (US-4.10):** dedicated **Call** tab with filterable provider list and `tel:` buttons; chat quick reply **Call a doctor** with specialty → provider picker.
 - **Push reminders (Phase 2):** service worker + Web Push; Phase 0 simulates with in-app banner and email log.
 
 ---

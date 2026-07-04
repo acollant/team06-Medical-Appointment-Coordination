@@ -1,4 +1,4 @@
-/* Mobile patient chatbot — Our Clinic assistant (US-4.8, US-4.9) */
+/* Mobile patient chatbot — Our Clinic assistant (US-4.8, US-4.9, US-4.10) */
 
 const CHATBOT = {
   state: "idle",
@@ -75,12 +75,12 @@ function bindChatActions(container) {
 
 function chatWelcome(messagesEl) {
   CHATBOT.state = "idle";
-  chatBotReply(messagesEl, `Hi ${chatFirstName()}! I'm the Our Clinic assistant. I can help you book a visit, find the nearest doctor, or check your appointments.`, {
+  chatBotReply(messagesEl, `Hi ${chatFirstName()}! I'm the Our Clinic assistant. I can help you book a visit, find the nearest doctor, call a doctor, or check your appointments.`, {
     quickReplies: [
       { id: "book_start", label: "Book appointment" },
+      { id: "call_doctor_start", label: "Call a doctor" },
       { id: "closest_start", label: "Nearest doctor" },
       { id: "my_appointments", label: "My appointments" },
-      { id: "my_reminders", label: "My reminders" },
       { id: "help", label: "What can you do?" },
     ],
   });
@@ -94,6 +94,7 @@ function handleChatAction(action, slotIndex = null) {
     my_appointments: "Show my appointments",
     my_reminders: "My reminders",
     help: "What can you do?",
+    call_doctor_start: "Call a doctor",
     confirm_book: "Yes, book it",
     cancel_flow: "Cancel an appointment",
   };
@@ -105,6 +106,11 @@ function handleChatAction(action, slotIndex = null) {
     chatUserReply(messagesEl, "Book this slot");
   } else if (action.startsWith("book_online_")) {
     chatUserReply(messagesEl, "Book online visit");
+  } else if (action.startsWith("call_pick_")) {
+    chatUserReply(messagesEl, getServiceById(action.replace("call_pick_", ""))?.patientLabel || "Call doctor");
+  } else if (action.startsWith("call_provider_")) {
+    const provider = getProviderById(action.replace("call_provider_", ""));
+    chatUserReply(messagesEl, `Call ${provider?.name || "doctor"}`);
   } else if (action.startsWith("call_doctor_")) {
     const svc = getServiceById(action.replace("call_doctor_", ""));
     chatUserReply(messagesEl, `Call ${getPrimaryProviderForService(action.replace("call_doctor_", ""))?.name || "doctor"}`);
@@ -134,12 +140,41 @@ function runChatAction(messagesEl, action, slotIndex) {
   }
 
   if (action === "help") {
-    chatBotReply(messagesEl, "I can:\n• Book by service (cardio, general doctor, skin care)\n• Find the closest practitioner with an open slot\n• If no in-person slots: call your doctor or book an online video visit\n• Show or cancel your upcoming visits\n\nTry \"book skin care\" when in-person slots are full.", {
+    chatBotReply(messagesEl, "I can:\n• Book by service (cardio, general doctor, skin care)\n• Call a doctor directly by specialty\n• Find the closest practitioner with an open slot\n• If no in-person slots: call your doctor or book an online video visit\n• Show or cancel your upcoming visits\n\nTry \"call a doctor\" or open the Call tab.", {
       quickReplies: [
         { id: "book_start", label: "Book appointment" },
+        { id: "call_doctor_start", label: "Call a doctor" },
         { id: "closest_start", label: "Nearest doctor" },
       ],
     });
+    return;
+  }
+
+  if (action === "call_doctor_start") {
+    showCallDoctorPicker(messagesEl);
+    return;
+  }
+
+  if (action.startsWith("call_pick_")) {
+    showCallProvidersForService(messagesEl, action.replace("call_pick_", ""));
+    return;
+  }
+
+  if (action.startsWith("call_provider_")) {
+    const providerId = action.replace("call_provider_", "");
+    const provider = getProviderById(providerId);
+    if (provider && initiateDoctorCall(provider)) {
+      chatBotReply(messagesEl, `Opening phone dialer for ${provider.name} (${formatPhoneDisplay(provider.phone)}).`, {
+        quickReplies: [
+          { id: "book_start", label: "Book a visit" },
+          { id: "call_doctor_start", label: "Call another doctor" },
+        ],
+      });
+    } else {
+      chatBotReply(messagesEl, "Sorry, we couldn't connect that call.", {
+        quickReplies: [{ id: "call_doctor_start", label: "Try again" }],
+      });
+    }
     return;
   }
 
@@ -342,6 +377,40 @@ function showClosestMatch(messagesEl, serviceId) {
   }
 }
 
+function showCallDoctorPicker(messagesEl) {
+  CHATBOT.state = "call_doctor_pick";
+  chatBotReply(messagesEl, "Which type of doctor would you like to call?", {
+    quickReplies: (FIXTURES.services || []).map((s) => ({
+      id: `call_pick_${s.id}`,
+      label: s.patientLabel,
+    })),
+  });
+}
+
+function showCallProvidersForService(messagesEl, serviceId) {
+  CHATBOT.state = "call_doctor_pick";
+  CHATBOT.pendingServiceId = serviceId;
+  const service = getServiceById(serviceId);
+  const providers = getProvidersForService(serviceId);
+
+  if (!providers.length) {
+    chatBotReply(messagesEl, `No phone numbers on file for ${service?.patientLabel || "this service"}.`, {
+      quickReplies: [{ id: "call_doctor_start", label: "Pick another specialty" }],
+    });
+    return;
+  }
+
+  chatBotReply(messagesEl, `Doctors you can call for ${service.patientLabel}:`, {
+    cards: providers.map((p) => ({
+      title: p.name,
+      subtitle: p.specialty,
+      meta: `${p.location} · ${formatPhoneDisplay(p.phone)}`,
+      action: `call_provider_${p.id}`,
+      actionLabel: "Call now",
+    })),
+  });
+}
+
 function showNoAvailabilityFallback(messagesEl, serviceId) {
   CHATBOT.pendingServiceId = serviceId;
   CHATBOT.state = "no_availability";
@@ -532,6 +601,7 @@ function parseChatIntent(text) {
   if (/my appointment|upcoming|when is/.test(t)) return { action: "my_appointments" };
   if (/reminder|remind me|notification/.test(t)) return { action: "my_reminders" };
   if (/cancel/.test(t)) return { action: "cancel_flow" };
+  if (/\bcall\b.*\b(doctor|dr)\b|\bphone\b.*\bdoctor\b|\bspeak to (a )?doctor\b|\bcall the clinic\b/.test(t)) return { action: "call_doctor_start" };
   if (/more slot|show more|other slot/.test(t)) return { action: "show_more" };
   if (/cardio|heart/.test(t)) {
     return { action: /nearest|closest|near/.test(t) ? `closest_cardiology` : "service_cardiology" };
@@ -560,6 +630,7 @@ function handleChatInput(text) {
       chatBotReply(messagesEl, `Hello ${chatFirstName()}! How can I help?`, {
         quickReplies: [
           { id: "book_start", label: "Book appointment" },
+          { id: "call_doctor_start", label: "Call a doctor" },
           { id: "my_appointments", label: "My appointments" },
         ],
       });
@@ -592,10 +663,10 @@ function handleChatInput(text) {
       runChatAction(messagesEl, intent.action, null);
       return;
     }
-    chatBotReply(messagesEl, "Try \"book general doctor\", \"nearest cardio\", or \"my appointments\".", {
+    chatBotReply(messagesEl, "Try \"book general doctor\", \"call a doctor\", or \"my appointments\".", {
       quickReplies: [
         { id: "book_start", label: "Book appointment" },
-        { id: "closest_start", label: "Nearest doctor" },
+        { id: "call_doctor_start", label: "Call a doctor" },
         { id: "my_appointments", label: "My appointments" },
       ],
     });
