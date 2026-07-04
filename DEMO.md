@@ -29,10 +29,10 @@ Then use:
 
 ## Quick client walkthrough
 
-1. **Maria · Patient** → Book by service → General Doctor → sort **Nearest first**
-2. **Closest to me** tab → Heart / Cardio → ZIP `11201` → Dr. James Chen highlighted
-3. Sign out → **Elena · Front desk** → Today's schedule (11 rows) + Call log (5 transcripts)
-4. Sign out → **David · Admin** → 3 locations, 6 providers, utilization reports
+1. **Maria · Mobile app** → Chat → **Book appointment** → General Doctor → confirm in chat
+2. Type `nearest cardio` or `my appointments` in the chatbot
+3. Sign out → **Elena · Front desk** → Today's schedule + Call log
+4. Sign out → **David · Admin** → locations, utilization reports
 
 ## What's in the demo data
 
@@ -49,7 +49,8 @@ Then use:
 
 | Button on login page | Role | Highlight |
 |---------------------|------|-----------|
-| Maria · Patient | Patient | Search, closest match, book |
+| Maria · Mobile app | Patient | Chatbot: book, nearest doctor, cancel |
+| Maria · Desktop | Patient | Search, closest match, book |
 | Elena · Front desk | FrontDesk | Schedule, call log, check-in |
 | Dr. Chen · Provider | Provider | Calendar, mark complete |
 | David · Admin | Admin | Locations, reports |

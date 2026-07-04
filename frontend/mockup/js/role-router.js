@@ -1,9 +1,11 @@
-function loginAs(personaId) {
+function loginAs(personaId, options = {}) {
   setSession(personaId);
   const persona = FIXTURES.personas[personaId];
   showToast(`Signed in as ${persona.name}`, "success");
+  const useMobile = options.mobile || (personaId === "P-1" && options.preferMobile);
+  const target = useMobile && persona.mobileDashboard ? persona.mobileDashboard : persona.dashboard;
   setTimeout(() => {
-    window.location.href = persona.dashboard;
+    window.location.href = target;
   }, 400);
 }
 
@@ -12,7 +14,8 @@ function handleLoginForm(e) {
   const email = e.target.email.value.trim().toLowerCase();
   const match = Object.values(FIXTURES.personas).find((p) => p.email === email);
   if (match) {
-    loginAs(match.id);
+    const preferMobile = match.id === "P-1" && window.matchMedia("(max-width: 768px)").matches;
+    loginAs(match.id, { preferMobile });
   } else {
     showToast("Invalid email or password", "error");
   }
@@ -20,7 +23,9 @@ function handleLoginForm(e) {
 
 document.addEventListener("DOMContentLoaded", () => {
   document.querySelectorAll("[data-login-as]").forEach((btn) => {
-    btn.addEventListener("click", () => loginAs(btn.dataset.loginAs));
+    btn.addEventListener("click", () => {
+      loginAs(btn.dataset.loginAs, { mobile: btn.dataset.mobile === "true" });
+    });
   });
 
   const form = document.getElementById("login-form");
@@ -31,7 +36,7 @@ document.addEventListener("DOMContentLoaded", () => {
     registerForm.addEventListener("submit", (e) => {
       e.preventDefault();
       showToast("Account created — signed in as Patient", "success");
-      loginAs("P-1");
+      loginAs("P-1", { mobile: window.matchMedia("(max-width: 768px)").matches });
     });
   }
 

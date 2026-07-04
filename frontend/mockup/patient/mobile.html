@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#2563eb">
+  <title>Our Clinic — Mobile</title>
+  <link rel="stylesheet" href="../css/tokens.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/mobile.css">
+</head>
+<body class="mobile-body">
+  <div class="mobile-app">
+    <header class="mobile-header">
+      <div>
+        <a href="mobile.html" class="brand">Our Clinic</a>
+        <span class="header-sub">Patient app · <span data-user-name></span></span>
+      </div>
+      <div class="mobile-header-actions">
+        <a href="dashboard.html" title="Desktop view">Desktop</a>
+        <a href="#" data-logout>Sign out</a>
+      </div>
+    </header>
+
+    <!-- Chat (primary) -->
+    <section id="panel-chat" class="mobile-panel mobile-panel-chat active" aria-label="Chat assistant">
+      <div id="chat-messages" class="chat-messages"></div>
+      <div class="chat-composer">
+        <input type="text" id="chat-input" placeholder="Book, find a doctor, ask…" autocomplete="off" enterkeyhint="send">
+        <button type="button" id="chat-send" aria-label="Send">➤</button>
+      </div>
+    </section>
+
+    <!-- Home -->
+    <section id="panel-home" class="mobile-panel mobile-panel-home" aria-label="Home">
+      <div class="mobile-home-stats" id="mobile-stats"></div>
+      <h2 style="font-size:0.95rem;margin:0 0 10px;">Upcoming</h2>
+      <div id="mobile-upcoming"></div>
+      <p style="margin-top:16px;">
+        <button type="button" class="btn btn-primary" style="width:100%;" data-goto-tab="chat">Ask assistant to book</button>
+      </p>
+      <h2 style="font-size:0.95rem;margin:20px 0 10px;">Locations</h2>
+      <div id="mobile-locations"></div>
+    </section>
+
+    <!-- Appointments -->
+    <section id="panel-appts" class="mobile-panel mobile-panel-home" aria-label="Appointments">
+      <h2 style="font-size:0.95rem;margin:0 0 12px;">My appointments</h2>
+      <div id="mobile-appt-list" class="mobile-appt-list"></div>
+    </section>
+
+    <nav class="mobile-tabbar" aria-label="Main">
+      <button type="button" class="active" data-tab="chat"><span class="tab-icon">💬</span>Chat</button>
+      <button type="button" data-tab="home"><span class="tab-icon">🏠</span>Home</button>
+      <button type="button" data-tab="appts"><span class="tab-icon">📅</span>Visits</button>
+    </nav>
+  </div>
+
+  <script src="../js/kaggle-fixtures.js"></script>
+  <script src="../js/demo-fixtures.js"></script>
+  <script src="../js/fixtures.js"></script>
+  <script src="../js/app.js"></script>
+  <script src="../js/search.js"></script>
+  <script src="../js/chatbot.js"></script>
+  <script>
+    const session = requireAuth(["Patient"]);
+    if (session) {
+      const userEl = document.querySelector("[data-user-name]");
+      if (userEl) userEl.textContent = session.name.split(" ")[0];
+
+      document.querySelectorAll("[data-logout]").forEach((btn) => {
+        btn.addEventListener("click", (e) => {
+          e.preventDefault();
+          clearSession();
+          window.location.href = "../index.html";
+        });
+      });
+
+      function showTab(tab) {
+        document.querySelectorAll(".mobile-panel").forEach((p) => p.classList.remove("active"));
+        document.getElementById(`panel-${tab}`)?.classList.add("active");
+        document.querySelectorAll(".mobile-tabbar button").forEach((b) => {
+          b.classList.toggle("active", b.dataset.tab === tab);
+        });
+        if (tab === "chat") document.getElementById("chat-input")?.focus();
+      }
+
+      document.querySelectorAll(".mobile-tabbar [data-tab]").forEach((btn) => {
+        btn.addEventListener("click", () => showTab(btn.dataset.tab));
+      });
+
+      document.querySelectorAll("[data-goto-tab]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          showTab(btn.dataset.gotoTab);
+          if (btn.dataset.gotoTab === "chat") handleChatAction("book_start", null);
+        });
+      });
+
+      function refreshMobileHome() {
+        const stats = FIXTURES.demoStats || {};
+        document.getElementById("mobile-stats").innerHTML = `
+          <div class="mobile-stat"><strong>${getAppointments().filter(a => a.patientId === "P-1" && a.status === "scheduled").length}</strong><span>Upcoming</span></div>
+          <div class="mobile-stat"><strong>${stats.openSlots || 12}</strong><span>Open slots</span></div>`;
+
+        const upcoming = getAppointments().filter(a => a.patientId === "P-1" && a.status === "scheduled");
+        document.getElementById("mobile-upcoming").innerHTML = upcoming.length
+          ? upcoming.map(a => `<div class="card"><strong>${a.displayDate}</strong><p>${a.provider} · ${a.type}</p><p>${a.location}</p></div>`).join("")
+          : `<div class="empty-state" style="padding:16px;">No upcoming visits</div>`;
+
+        document.getElementById("mobile-locations").innerHTML = (FIXTURES.locations || []).slice(0, 3).map(loc =>
+          `<div class="card" style="margin-bottom:8px;"><strong>${loc.shortName}</strong><p style="font-size:0.8rem;">${loc.address}</p></div>`
+        ).join("");
+      }
+
+      function refreshMobileAppointments() {
+        const appts = getAppointments().filter(a => a.patientId === "P-1");
+        document.getElementById("mobile-appt-list").innerHTML = appts.length
+          ? appts.map(a => `<div class="card">
+              <strong>${a.displayDate}</strong>
+              <p>${a.provider} · ${a.type}</p>
+              <p>${a.location} · ${statusBadge(a.status)}</p>
+            </div>`).join("")
+          : `<div class="empty-state">No appointments</div>`;
+      }
+
+      refreshMobileHome();
+      refreshMobileAppointments();
+      initChatbot();
+
+      const params = new URLSearchParams(location.search);
+      if (params.get("tab") === "appts") showTab("appts");
+      if (params.get("action") === "book") {
+        showTab("chat");
+        setTimeout(() => handleChatAction("book_start", null), 500);
+      }
+    }
+  </script>
+</body>
+</html>

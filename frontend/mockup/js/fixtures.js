@@ -11,6 +11,7 @@ const FIXTURES = {
       name: "Maria Santos",
       role: "Patient",
       dashboard: "patient/dashboard.html",
+      mobileDashboard: "patient/mobile.html",
     },
     "P-2": {
       id: "P-2",

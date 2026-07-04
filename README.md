@@ -28,7 +28,8 @@ Opens **http://localhost:8080** in your browser automatically.
 
 | URL | What |
 |-----|------|
-| http://localhost:8080 | Sign in — click a persona (no password) |
+| http://localhost:8080 | Sign in — click **Maria · Mobile app** for chatbot |
+| http://localhost:8080/patient/mobile.html | Patient mobile app (after sign-in) |
 | http://localhost:8080/demo.html | Step-by-step client demo |
 | http://localhost:8080/api/v1/health | Mock API health check |
 

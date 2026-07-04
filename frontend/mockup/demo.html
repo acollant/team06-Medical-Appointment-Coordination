@@ -30,7 +30,15 @@
 
     <h2>Recommended demo flow (~10 min)</h2>
 
-    <p><span class="step-num">1</span><strong>Patient books by service</strong> — click <em>Maria · Patient</em></p>
+    <p><span class="step-num">1</span><strong>Patient mobile app + chatbot</strong> — click <em>Maria · Mobile app</em></p>
+    <ul>
+      <li>Mobile-first UI with bottom tabs: <strong>Chat</strong>, Home, Visits</li>
+      <li>Chatbot: tap <strong>Book appointment</strong> → pick service → book a slot in-chat</li>
+      <li>Try typing <code>nearest general doctor</code> or <code>my appointments</code></li>
+      <li>Confirm booking — appears on Home and Visits tabs instantly</li>
+    </ul>
+
+    <p><span class="step-num">2</span><strong>Patient desktop booking</strong> — <em>Maria · Desktop</em></p>
     <ul>
       <li>Dashboard shows upcoming cardio visit + clinic stats</li>
       <li><strong>+ Book new appointment</strong> → <strong>By service</strong> tab</li>
@@ -38,26 +46,26 @@
       <li>Click <strong>Book</strong> on any slot → confirm booking</li>
     </ul>
 
-    <p><span class="step-num">2</span><strong>Closest practitioner</strong> — still as Maria</p>
+    <p><span class="step-num">3</span><strong>Closest practitioner (desktop)</strong> — still as Maria desktop</p>
     <ul>
       <li>Open <strong>Closest to me</strong> tab → select <strong>Heart / Cardio</strong></li>
       <li>ZIP <code>11201</code> (Brooklyn) → <strong>Find closest practitioner</strong></li>
       <li>Highlights <strong>Dr. James Chen</strong> (~0.3 km) with next open slot + alternatives</li>
     </ul>
 
-    <p><span class="step-num">3</span><strong>Front desk operations</strong> — sign out → click <em>Elena · Front desk</em></p>
+    <p><span class="step-num">4</span><strong>Front desk operations</strong> — sign out → click <em>Elena · Front desk</em></p>
     <ul>
       <li><strong>Today's schedule</strong> — 11 appointments across providers (check-in, walk-ins, open slots)</li>
       <li><strong>Call log</strong> — 5 phone/IVR transcripts from Kaggle dataset; filter by book/cancel/reschedule</li>
       <li>Click <strong>Match availability</strong> on a booking call to jump to patient search</li>
     </ul>
 
-    <p><span class="step-num">4</span><strong>Provider view</strong> — sign out → <em>Dr. Chen · Provider</em></p>
+    <p><span class="step-num">5</span><strong>Provider view</strong> — sign out → <em>Dr. Chen · Provider</em></p>
     <ul>
       <li>Calendar shows Maria (scheduled) and John (checked in) — click to mark complete / no-show</li>
     </ul>
 
-    <p><span class="step-num">5</span><strong>Admin overview</strong> — sign out → <em>David · Admin</em></p>
+    <p><span class="step-num">6</span><strong>Admin overview</strong> — sign out → <em>David · Admin</em></p>
     <ul>
       <li><strong>Clinic</strong> — 3 locations (Brooklyn, Midtown, Queens), appointment types, holidays</li>
       <li><strong>Reports</strong> — utilization 85%, no-show 12%, channel breakdown</li>
@@ -80,7 +88,8 @@
     <table>
       <thead><tr><th>Button</th><th>Role</th><th>Best screens</th></tr></thead>
       <tbody>
-        <tr><td>Maria · Patient</td><td>Patient</td><td>Search, closest match, book, appointments</td></tr>
+        <tr><td>Maria · Mobile app</td><td>Patient</td><td>Chatbot booking, nearest doctor, cancel in chat</td></tr>
+        <tr><td>Maria · Desktop</td><td>Patient</td><td>Search, closest match, book, appointments</td></tr>
         <tr><td>Elena · Front desk</td><td>FrontDesk</td><td>Schedule, call log, walk-in, check-in</td></tr>
         <tr><td>Dr. Chen · Provider</td><td>Provider</td><td>Calendar, availability templates</td></tr>
         <tr><td>David · Admin</td><td>Admin</td><td>Clinic setup, users, reports</td></tr>
